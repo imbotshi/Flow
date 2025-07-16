@@ -1,0 +1,27 @@
+{
+  "name": "vania-flow",
+  "version": "1.0.0",
+  "description": "Application Vania Flow - Frontend Vue.js + Backend Node.js",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "start": "cd backend && npm start",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "setup": "npm run install:all && cd backend && npm run complete-setup"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "vania-flow",
+    "vue",
+    "nodejs",
+    "express",
+    "mongodb"
+  ],
+  "author": "Vania Flow Team",
+  "license": "MIT"
+} 

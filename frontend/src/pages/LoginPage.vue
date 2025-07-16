@@ -148,16 +148,24 @@ const sendSecurityCode = async () => {
   if (phoneNumber.value && !isLoading.value) {
     isLoading.value = true;
     try {
+      console.log("🚀 Début envoi OTP pour:", phoneNumber.value);
       const result = await otpService.sendOtp(phoneNumber.value);
+      
+      console.log("📋 Résultat envoi OTP:", result);
+      
       if (result.success) {
         otpSent.value = true;
-        console.log("OTP envoyé avec succès");
+        console.log("✅ OTP envoyé avec succès");
+        // Optionnel: afficher un message de succès
+        // errorMessage.value = "Code envoyé avec succès !";
+        // showErrorModal.value = true;
       } else {
+        console.error("❌ Échec envoi OTP:", result);
         errorMessage.value = result.message || "Erreur lors de l'envoi du code";
         showErrorModal.value = true;
       }
     } catch (error) {
-      console.error("Error sending security code:", error);
+      console.error("💥 Exception envoi OTP:", error);
       errorMessage.value = "Erreur lors de l'envoi du code";
       showErrorModal.value = true;
     } finally {
@@ -170,15 +178,23 @@ const resendCode = async () => {
   if (phoneNumber.value && !isLoading.value) {
     isLoading.value = true;
     try {
+      console.log("🔄 Début renvoi OTP pour:", phoneNumber.value);
       const result = await otpService.sendOtp(phoneNumber.value);
+      
+      console.log("📋 Résultat renvoi OTP:", result);
+      
       if (result.success) {
-        console.log("OTP renvoyé avec succès");
+        console.log("✅ OTP renvoyé avec succès");
+        // Optionnel: afficher un message de succès
+        // errorMessage.value = "Nouveau code envoyé avec succès !";
+        // showErrorModal.value = true;
       } else {
+        console.error("❌ Échec renvoi OTP:", result);
         errorMessage.value = result.message || "Erreur lors du renvoi du code";
         showErrorModal.value = true;
       }
     } catch (error) {
-      console.error("Error resending security code:", error);
+      console.error("💥 Exception renvoi OTP:", error);
       errorMessage.value = "Erreur lors du renvoi du code";
       showErrorModal.value = true;
     } finally {
@@ -191,16 +207,25 @@ const handleValidate = async () => {
   if (canValidate.value && !isLoading.value) {
     isLoading.value = true;
     try {
+      console.log("🔐 Début vérification OTP:", { 
+        phone: phoneNumber.value, 
+        codeLength: securityCode.value.length 
+      });
+      
       const result = await otpService.verifyOtp(phoneNumber.value, securityCode.value);
+      
+      console.log("📋 Résultat vérification OTP:", result);
+      
       if (result.success) {
-        console.log("Connexion réussie");
+        console.log("✅ Connexion réussie");
         router.push("/dashboard");
       } else {
+        console.error("❌ Échec vérification OTP:", result);
         errorMessage.value = result.message || "Code incorrect ou expiré";
         showErrorModal.value = true;
       }
     } catch (error) {
-      console.error("Error validating credentials:", error);
+      console.error("💥 Exception vérification OTP:", error);
       errorMessage.value = "Erreur lors de la validation";
       showErrorModal.value = true;
     } finally {
