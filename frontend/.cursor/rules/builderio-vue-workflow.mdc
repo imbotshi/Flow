@@ -1,0 +1,89 @@
+---
+alwaysApply: false
+---
+### 🧩 Exigences Générales {.section}
+
+- **Framework** : Vue 3 (Composition API)
+- **Langage** : Typescript activé
+- **Responsive** : Mobile-first, adaptable desktop
+- **Export attendu** : fichiers `.vue` modulaires
+
+**Structure demandée** :
+- Atomic design (atoms, molecules, organisms)
+- Composants clairs, isolés, réutilisables
+- Navigation entre écrans via Vue Router
+- Nommage en `PascalCase`
+
+---
+
+### 🧭 Workflow Utilisateur {.section}
+
+```json
+{
+  "type": "workflow",
+  "framework": "vue",
+  "screens": [
+    {
+      "id": "PhoneInputScreen",
+      "components": ["PhoneInput", "SubmitButton"],
+      "next": "VerifyOtpScreen"
+    },
+    {
+      "id": "VerifyOtpScreen",
+      "components": ["OtpInput", "ResendLink", "ValidateButton"],
+      "next": "PersonalInfoScreen"
+    },
+    {
+      "id": "PersonalInfoScreen",
+      "components": ["TextInputName", "TextInputEmail", "SubmitButton"],
+      "next": "Dashboard"
+    },
+    {
+      "id": "Dashboard",
+      "components": ["UserSummary", "NotificationsList", "NavigationMenu"]
+    }
+  ]
+}
+```
+
+Chaque écran doit être généré dans un fichier `.vue`, et relié logiquement au suivant par le router.
+
+---
+
+### 🧠 Comportement attendu de Builder.io {.section}
+
+- Génération automatique des composants Vue.js en respectant les noms et structures spécifiés
+- Ajout des props nécessaires et liaison des événements via `emit`
+- Navigation logique assurée via Vue Router
+- Respect du design system (grille, tokens, marges/paddings)
+- Gestion des états `idle`, `loading`, `success`, `error`
+
+---
+
+### 🔐 Sécurité et UX {.section}
+
+- Affichage de feedback utilisateur lors des actions
+- Gestion des erreurs réseau ou validation
+- Comportement accessible (focus, lecture écran)
+
+---
+
+### 📦 Format attendu du livrable {.section}
+
+- `/components/` : composants réutilisables
+- `/pages/` : écrans Vue liés au router
+- `/router/` : configuration Vue Router
+- `/store/` : état centralisé (Pinia recommandé)
+- `/assets/` : icônes, illustrations
+
+---
+
+### ✅ Critères de validation {.section}
+
+- Code lisible, typé, modulaire
+- Navigation fluide entre les étapes
+- Interfaces fidèles aux maquettes
+- Zéro bug sur le parcours
+- Fichiers `.vue` exploitables directement dans un repo
+
+---

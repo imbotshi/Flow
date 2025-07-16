@@ -1,0 +1,70 @@
+
+product.requirements.frontend_refactor_spec:
+  project: "Refonte intelligente d’interface Figma > Builder.io via Cursor AI"
+  goal: |
+    Refactorer automatiquement le frontend issu d’un import Builder.io (depuis une maquette Figma mobile), dans une structure Design Atomique moderne, en :
+      - Déduisant les composants réellement utilisés
+      - Reconstituant les composants manquants de manière conforme
+      - Ne générant **aucune hallucination visuelle ou fonctionnelle**
+      - Proposant des améliorations uniquement dans le cadre du design system d’origine
+      - Produisant un code propre, modulaire, documenté
+
+  constraints:
+    visual_integrity:
+      - Respect strict des dimensions, positions, couleurs et typographies de Figma.
+      - Aucune liberté créative non encadrée.
+      - Si un composant ou une section est absent, ne pas le compléter arbitrairement.
+      - Proposer une amélioration seulement si elle repose sur des motifs visuels existants dans d’autres pages du projet.
+
+    design_system:
+      - Appliquer un modèle de Design Atomique :
+          Atome : Bouton, Label, Input, Icone
+          Molécule : Carte, Formulaire, Header
+          Organisme : Section Hero, Footer, Liste dynamique
+      - Tout nouveau composant proposé doit être dérivé **uniquement** de composants déjà observés (atomes ou molécules).
+      - Les fichiers doivent suivre une structure : `/atoms`, `/molecules`, `/organisms`, `/templates`
+
+    naming_convention:
+      - Convention explicite et hiérarchique (`BtnPrimary`, `CardProduct`, `InputPhoneNumber`)
+      - Tous les composants doivent être encodés en PascalCase
+      - Les noms doivent refléter la **fonction** avant l’esthétique
+
+    refactoring_scope:
+      - Réorganiser et simplifier le code généré par Builder.io
+      - Supprimer les div et éléments HTML inutiles
+      - Convertir en composants Vue (ou React) modulaires
+      - Préparer l’extensibilité pour future intégration dynamique (props, slots)
+
+    anti-hallucination_protocol:
+      - Avant toute proposition créative ou d’amélioration, **faire une validation croisée** avec les éléments déjà visibles dans les autres écrans/pages.
+      - Générer une **note de justification** en commentaire pour toute suggestion de design, expliquant :
+          1. Quelle logique visuelle ou UX existante elle prolonge
+          2. Pourquoi elle ne contredit pas les intentions de Figma
+
+    style_guide_injection:
+      - Importer automatiquement les règles de style globales détectées dans la maquette :
+          font-family, breakpoints, radius, ombres, couleurs principales (avec variable CSS)
+      - Générer un fichier `style.config.js` si absent
+
+  example:
+    incomplete_component_handling:
+      input: "Une section de formulaire n’a qu’un champ prénom visible"
+      output:
+        - Ne pas générer les autres champs supposés (ex: nom, email, téléphone)
+        - Ajouter un `// TODO` ou `// @incomplete` dans le code et proposer un bloc optionnel
+        - Proposer un composant `FormSection` basé sur d’autres patterns si pertinents
+        - Ne jamais inventer un champ ou icône non présent dans Figma
+
+  deliverables:
+    - `/components/atoms/*.vue`
+    - `/components/molecules/*.vue`
+    - `/components/organisms/*.vue`
+    - `/components/templates/*.vue`
+    - `/style/config.js`
+    - `README.md` avec justification de toute proposition générée
+    - L’interface refactorée 100% alignée sur Figma, optimisée pour mobile
+
+  bonus_features:
+    - Composants commentés automatiquement
+    - Détection des répétitions ou duplications de layout
+    - Préparation à l’internationalisation (`i18n-ready`)
