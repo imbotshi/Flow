@@ -1,0 +1,142 @@
+---
+alwaysApply: false
+---
+
+# Rule: Interface Extraction from Product PDF
+
+## Purpose
+Extract a complete, structured specification of all user interfaces (UI) described in the input PDF document. The goal is to output a detailed mapping of UI screens, components, and their behaviors as a structured requirement document.
+
+## Scope
+This rule applies to any PDF containing product documentation, functional specs, or UX/UI plans. It is used to generate a **Design Interface Inventory**, useful for frontend development or product planning.
+
+## Instruction
+Read the entire PDF file. Identify each interface/screen described. For **each interface**, provide the following in structured Markdown:
+
+### Interface Specification Format:
+
+```
+### [Interface Name]
+**Functional Objective**: [One-line description of the purpose of this interface.]
+
+**Components**:
+- **[Component Name]**
+  - Type: [button, input, select, modal, etc.]
+  - Key Properties: [label, placeholder, icon, value, etc.]
+  - Dynamic States: [default, disabled, loading, focused, validated, etc.]
+
+[Repeat for each component]
+
+**Linked Interfaces**: [List of other interfaces this screen connects to, if any.]
+```
+
+## Output Constraints
+- Do not mention design, style, colors, or visuals.
+- Do not summarize the PDF.
+- Only extract concrete, explicit UI elements mentioned in the text.
+- Do not invent or guess functionality.
+- Use clear and concise language.
+- Omit marketing or narrative language.
+
+## Example
+
+Given:
+> “L’utilisateur arrive sur l’écran d’accueil avec un tableau listant les paiements. Il peut cliquer sur un bouton + pour ajouter un locataire. Une barre de recherche filtre les paiements par nom ou date.”
+
+Output:
+
+```
+### Écran d’accueil
+**Functional Objective**: Afficher les paiements en cours et permettre l’ajout d’un locataire.
+
+**Components**:
+- **Tableau des paiements**
+  - Type: table
+  - Key Properties: colonnes (Nom, Montant, Date), triable
+  - Dynamic States: scrollable, paginé
+
+- **Bouton Ajouter un locataire**
+  - Type: button
+  - Key Properties: icône "+", couleur primaire
+  - Dynamic States: actif, loading
+
+- **Barre de recherche**
+  - Type: input
+  - Key Properties: placeholder "Rechercher un paiement…"
+  - Dynamic States: vide, focus, avec texte
+
+**Linked Interfaces**: Écran d’ajout de locataire
+```
+
+## File Requirement
+- Always return output as Markdown (.md)
+- The result should be directly usable in product documentation or frontend specs.
+# Rule: Interface Extraction from Product PDF
+
+## Purpose
+Extract a complete, structured specification of all user interfaces (UI) described in the input PDF document. The goal is to output a detailed mapping of UI screens, components, and their behaviors as a structured requirement document.
+
+## Scope
+This rule applies to any PDF containing product documentation, functional specs, or UX/UI plans. It is used to generate a **Design Interface Inventory**, useful for frontend development or product planning.
+
+## Instruction
+Read the entire PDF file. Identify each interface/screen described. For **each interface**, provide the following in structured Markdown:
+
+### Interface Specification Format:
+
+```
+### [Interface Name]
+**Functional Objective**: [One-line description of the purpose of this interface.]
+
+**Components**:
+- **[Component Name]**
+  - Type: [button, input, select, modal, etc.]
+  - Key Properties: [label, placeholder, icon, value, etc.]
+  - Dynamic States: [default, disabled, loading, focused, validated, etc.]
+
+[Repeat for each component]
+
+**Linked Interfaces**: [List of other interfaces this screen connects to, if any.]
+```
+
+## Output Constraints
+- Do not mention design, style, colors, or visuals.
+- Do not summarize the PDF.
+- Only extract concrete, explicit UI elements mentioned in the text.
+- Do not invent or guess functionality.
+- Use clear and concise language.
+- Omit marketing or narrative language.
+
+## Example
+
+Given:
+> “L’utilisateur arrive sur l’écran d’accueil avec un tableau listant les paiements. Il peut cliquer sur un bouton + pour ajouter un locataire. Une barre de recherche filtre les paiements par nom ou date.”
+
+Output:
+
+```
+### Écran d’accueil
+**Functional Objective**: Afficher les paiements en cours et permettre l’ajout d’un locataire.
+
+**Components**:
+- **Tableau des paiements**
+  - Type: table
+  - Key Properties: colonnes (Nom, Montant, Date), triable
+  - Dynamic States: scrollable, paginé
+
+- **Bouton Ajouter un locataire**
+  - Type: button
+  - Key Properties: icône "+", couleur primaire
+  - Dynamic States: actif, loading
+
+- **Barre de recherche**
+  - Type: input
+  - Key Properties: placeholder "Rechercher un paiement…"
+  - Dynamic States: vide, focus, avec texte
+
+**Linked Interfaces**: Écran d’ajout de locataire
+```
+
+## File Requirement
+- Always return output as Markdown (.md)
+- The result should be directly usable in product documentation or frontend specs.
