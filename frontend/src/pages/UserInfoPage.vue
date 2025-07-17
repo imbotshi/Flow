@@ -74,6 +74,15 @@
             Continuer
           </VButton>
         </section>
+
+        <!-- Affichage du message d'erreur nom complet -->
+        <section v-if="errors.fullName" class="fullname-error-section" data-bind="fullname-error-section">
+          <p class="fullname-error-message">Le nom complet doit contenir plus de 5 lettres.</p>
+        </section>
+        <!-- Affichage du message d'erreur global -->
+        <section v-if="errorMessage" class="userinfo-error-section" data-bind="userinfo-error-section">
+          <p class="userinfo-error-message">{{ errorMessage }}</p>
+        </section>
       </form>
     </main>
   </VAppLayout>
@@ -86,8 +95,10 @@ import VAppLayout from "../components/organisms/VAppLayout.vue";
 import VInput from "../components/atoms/VInput.vue";
 import VButton from "../components/atoms/VButton.vue";
 import VPhotoUpload from "../components/molecules/VPhotoUpload.vue";
+import { useUserStore } from "../stores/user.js";
 
 const router = useRouter();
+const userStore = useUserStore();
 
 // === STATE MANAGEMENT ===
 const profilePhoto = ref(null);
@@ -99,10 +110,21 @@ const errors = reactive({
   fullName: false,
   country: false,
 });
+const errorMessage = ref("");
+
+// Conversion image en base64
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 // === COMPUTED VALUES ===
 const canContinue = computed(() => {
-  return fullName.value.trim().length > 0 && country.value.trim().length > 0;
+  return fullName.value.trim().length > 5;
 });
 
 const formData = computed(() => ({
@@ -113,11 +135,10 @@ const formData = computed(() => ({
 
 // === METHODS ===
 const validateForm = () => {
-  errors.fullName = fullName.value.trim().length < 2;
-  errors.country = country.value.trim().length < 2;
+  errors.fullName = fullName.value.trim().length <= 5;
   errors.photo = false; // Photo is optional
-
-  return !errors.fullName && !errors.country;
+  errors.country = false; // Pays optionnel
+  return !errors.fullName;
 };
 
 const showFieldError = (fieldName) => {
@@ -127,47 +148,49 @@ const showFieldError = (fieldName) => {
 };
 
 const handleContinue = async () => {
+  errorMessage.value = "";
   if (!validateForm()) {
-    // Show specific field errors
     if (errors.fullName) showFieldError("full-name");
-    if (errors.country) showFieldError("country");
-
     // Shake the form
-    const formSection = document.querySelector(
-      '[data-bind="form-fields-section"]',
-    );
+    const formSection = document.querySelector('[data-bind="form-fields-section"]');
     formSection?.setAttribute("data-error", "true");
     setTimeout(() => formSection?.removeAttribute("data-error"), 3000);
-
     return;
   }
 
   if (canContinue.value && !isLoading.value) {
     isLoading.value = true;
-
     try {
-      // TODO: Save user information to backend
-      console.log("Saving user information:", formData.value);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Show success state
-      const formSection = document.querySelector(
-        '[data-bind="form-fields-section"]',
-      );
-      formSection?.setAttribute("data-success", "true");
-
-      setTimeout(() => {
-        router.push("/business-experience");
-      }, 1000);
+      // Récupérer le numéro de téléphone stocké
+      const telephone = localStorage.getItem('otpPhone');
+      if (!telephone) {
+        errorMessage.value = "Numéro de téléphone manquant.";
+        throw new Error("Numéro de téléphone manquant");
+      }
+      // Convertir la photo en base64 si présente
+      let photoBase64 = null;
+      if (profilePhoto.value && profilePhoto.value instanceof File) {
+        photoBase64 = await toBase64(profilePhoto.value);
+        localStorage.setItem('userProfilePhoto', photoBase64);
+      }
+      // Stocker toutes les infos dans localStorage
+      const userInfo = {
+        telephone,
+        fullName: fullName.value.trim(),
+        country: country.value.trim(),
+        profilePhoto: photoBase64 || null
+      };
+      localStorage.setItem('userInfo', JSON.stringify(userInfo));
+      // ... (tu peux aussi envoyer ces infos au backend ici si besoin)
+      // Afficher succès et passer à la suite
+      const formSection = document.querySelector('[data-bind="form-fields-section"]');
+        formSection?.setAttribute("data-success", "true");
+        setTimeout(() => {
+          router.push("/business-experience");
+        }, 1000);
     } catch (error) {
-      console.error("Error saving user information:", error);
-
-      // Show error state
-      const formSection = document.querySelector(
-        '[data-bind="form-fields-section"]',
-      );
+      errorMessage.value = error.message || "Erreur lors de la sauvegarde.";
+      const formSection = document.querySelector('[data-bind="form-fields-section"]');
       formSection?.setAttribute("data-error", "true");
     } finally {
       isLoading.value = false;

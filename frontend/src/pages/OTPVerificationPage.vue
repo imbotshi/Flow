@@ -66,6 +66,11 @@
             @tick="handleTimerTick"
           />
         </section>
+
+        <!-- Error Section -->
+        <section v-if="errorMessage" class="otp-error-section" data-bind="otp-error-section">
+          <p class="otp-error-message">{{ errorMessage }}</p>
+        </section>
       </form>
     </main>
   </VAppLayout>
@@ -78,6 +83,7 @@ import VAppLayout from "../components/organisms/VAppLayout.vue";
 import VCodeInput from "../components/atoms/VCodeInput.vue";
 import VButton from "../components/atoms/VButton.vue";
 import VCountdownTimer from "../components/molecules/VCountdownTimer.vue";
+import otpService from "../services/otpService";
 
 const router = useRouter();
 
@@ -89,10 +95,11 @@ const resendCount = ref(0);
 const errors = reactive({
   otp: false,
 });
+const errorMessage = ref("");
 
 // === COMPUTED VALUES ===
 const canContinue = computed(() => {
-  return otpCode.value.length === 5;
+  return otpCode.value.length === 5 && /^\d{5}$/.test(otpCode.value);
 });
 
 // === METHODS ===
@@ -105,6 +112,7 @@ const handleOTPInput = (code) => {
   // Clear error state when user starts typing
   if (errors.otp && code.length > 0) {
     errors.otp = false;
+    errorMessage.value = "";
     const codeWrapper = document.querySelector(
       '[data-bind="code-input-wrapper"]',
     );
@@ -122,6 +130,7 @@ const handleOTPInput = (code) => {
 };
 
 const handleContinue = async () => {
+  errorMessage.value = "";
   if (!validateOTP()) {
     const codeWrapper = document.querySelector(
       '[data-bind="code-input-wrapper"]',
@@ -135,38 +144,30 @@ const handleContinue = async () => {
     isLoading.value = true;
 
     try {
-      // TODO: Verify OTP code with backend
-      console.log("Verifying OTP code:", otpCode.value);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Check if OTP is valid (simulate)
-      const isValidOTP = otpCode.value === "12345" || Math.random() > 0.3;
-
-      if (isValidOTP) {
+      // Appel réel au service OTP
+      // Il faut récupérer le numéro de téléphone utilisé (à stocker dans le store ou localStorage)
+      const phone = localStorage.getItem('otpPhone') || '';
+      const result = await otpService.verifyOtp(phone, otpCode.value);
+      if (result.success) {
         // Show success state
         const codeWrapper = document.querySelector(
           '[data-bind="code-input-wrapper"]',
         );
         codeWrapper?.setAttribute("data-success", "true");
-
         setTimeout(() => {
           router.push("/user-info");
         }, 1000);
       } else {
-        throw new Error("Invalid OTP code");
+        throw new Error(result.message || "Code OTP incorrect");
       }
     } catch (error) {
-      console.error("Error verifying OTP:", error);
       errors.otp = true;
-
+      errorMessage.value = error.message || "Code OTP incorrect";
       // Show error state
       const codeWrapper = document.querySelector(
         '[data-bind="code-input-wrapper"]',
       );
       codeWrapper?.setAttribute("data-error", "true");
-
       // Clear OTP input for retry
       otpCode.value = "";
     } finally {

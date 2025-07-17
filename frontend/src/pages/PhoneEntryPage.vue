@@ -36,6 +36,7 @@
                 aria-label="Sélectionner votre pays et code"
                 autocomplete="country"
                 :data-error="errors.country"
+                :disabled="true"
               />
               <VInput
                 v-model="phoneNumber"
@@ -55,7 +56,7 @@
         <section class="disclaimer-section" data-bind="disclaimer-section">
           <p class="disclaimer-text" data-bind="disclaimer-text">
             Vous acceptez de recevoir automatiquement des messages de notre
-            part, même si notre num��ro de téléphone est placé dans une liste
+            part, même si notre numéro de téléphone est placé dans une liste
             indésirable. Vous acceptez aussi les
             <button
               type="button"
@@ -96,6 +97,16 @@
             Continuer
           </VButton>
         </section>
+
+        <!-- Confirmation Section -->
+        <section v-if="confirmationMessage" class="confirmation-section" data-bind="confirmation-section">
+          <p class="confirmation-message">{{ confirmationMessage }}</p>
+        </section>
+
+        <!-- Phone Error Section -->
+        <section v-if="phoneErrorMessage" class="phone-error-section" data-bind="phone-error-section">
+          <p class="phone-error-message">{{ phoneErrorMessage }}</p>
+        </section>
       </form>
     </main>
   </VAppLayout>
@@ -107,6 +118,8 @@ import { useRouter } from "vue-router";
 import VAppLayout from "../components/organisms/VAppLayout.vue";
 import VInput from "../components/atoms/VInput.vue";
 import VButton from "../components/atoms/VButton.vue";
+import otpService from "../services/otpService";
+import userService from "../services/userService";
 
 const router = useRouter();
 
@@ -118,10 +131,17 @@ const errors = reactive({
   country: false,
   phone: false,
 });
+const confirmationMessage = ref("");
+const phoneErrorMessage = ref("");
 
 // === COMPUTED VALUES ===
 const canContinue = computed(() => {
-  return phoneNumber.value.length >= 8 && countryCode.value.length > 0;
+  // Valide : 9 chiffres exactement, tous numériques
+  return (
+    phoneNumber.value.length === 9 &&
+    /^\d{9}$/.test(phoneNumber.value) &&
+    countryCode.value.length > 0
+  );
 });
 
 const fullPhoneNumber = computed(() => {
@@ -130,13 +150,15 @@ const fullPhoneNumber = computed(() => {
 
 // === METHODS ===
 const validatePhoneNumber = () => {
-  errors.phone = phoneNumber.value.length < 8;
+  errors.phone =
+    phoneNumber.value.length !== 9 || !/^\d{9}$/.test(phoneNumber.value);
   errors.country = countryCode.value.length === 0;
-
   return !errors.phone && !errors.country;
 };
 
 const handleContinue = async () => {
+  confirmationMessage.value = "";
+  phoneErrorMessage.value = "";
   if (!validatePhoneNumber()) {
     // Show validation errors
     const phoneSection = document.querySelector(
@@ -149,23 +171,33 @@ const handleContinue = async () => {
 
   if (canContinue.value && !isLoading.value) {
     isLoading.value = true;
-
     try {
-      // TODO: Store phone number for next step
-      console.log("Phone number submitted:", fullPhoneNumber.value);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Navigate to OTP verification
-      router.push("/otp");
+      // Vérifier si le numéro existe déjà
+      const verif = await userService.verifierUtilisateur(fullPhoneNumber.value);
+      if (verif.existe) {
+        phoneErrorMessage.value =
+          "Ce numéro est déjà inscrit. Veuillez vous connecter.";
+        isLoading.value = false;
+        return;
+      }
+      // Stocker le numéro pour la page OTP
+      localStorage.setItem('otpPhone', fullPhoneNumber.value);
+      // Appel mock OTP
+      const result = await otpService.sendOtp(fullPhoneNumber.value);
+      if (result.success) {
+        confirmationMessage.value =
+          "Un code a été envoyé à votre numéro.";
+        // Optionnel : attendre un peu avant de naviguer
+        setTimeout(() => {
+          router.push("/otp");
+        }, 1200);
+      } else {
+        confirmationMessage.value = result.message ||
+          "Erreur lors de l'envoi du code.";
+      }
     } catch (error) {
-      console.error("Error submitting phone number:", error);
-      // Show error state
-      const phoneSection = document.querySelector(
-        '[data-bind="phone-input-section"]',
-      );
-      phoneSection?.setAttribute("data-error", "true");
+      confirmationMessage.value =
+        error.message || "Erreur lors de l'envoi du code.";
     } finally {
       isLoading.value = false;
     }

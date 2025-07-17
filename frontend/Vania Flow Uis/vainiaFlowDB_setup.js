@@ -1,7 +1,7 @@
-// SCRIPT DE CRÉATION DE LA BASE DE DONNÉES VAINIA FLOW - VERSION AMÉLIORÉE
+// SCRIPT DE CRÉATION DE LA BASE DE DONNÉES VANIA FLOW - VERSION AMÉLIORÉE
 
 // Utilisation de la base
-use vainiaFlowDB;
+use vaniaFlowDB;
 
 // --- COLLECTION: utilisateurs ---
 db.createCollection("utilisateurs", {

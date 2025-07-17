@@ -128,8 +128,10 @@ import VModal from "../components/atoms/VModal.vue";
 import PhoneIcon from "../components/atoms/icons/PhoneIcon.vue";
 import LockIcon from "../components/atoms/icons/LockIcon.vue";
 import otpService from "../services/otpService.js";
+import { useUserStore } from "../stores/user.js";
 
 const router = useRouter();
+const userStore = useUserStore();
 
 // === STATE MANAGEMENT - READY FOR DYNAMIC BINDING ===
 const phoneNumber = ref("");
@@ -217,8 +219,32 @@ const handleValidate = async () => {
       console.log("📋 Résultat vérification OTP:", result);
       
       if (result.success) {
-        console.log("✅ Connexion réussie");
-        router.push("/dashboard");
+        console.log("✅ OTP vérifié avec succès");
+        
+        // Stocker le numéro de téléphone en mémoire tampon
+        userStore.setTelephone(phoneNumber.value);
+        
+        // Vérifier si l'utilisateur existe dans la base de données
+        console.log("🔍 Vérification de l'existence de l'utilisateur...");
+        const userCheck = await userStore.verifierUtilisateur(phoneNumber.value);
+        
+        if (userCheck.success) {
+          if (userCheck.existe) {
+            // Utilisateur existe, mettre à jour sa dernière connexion
+            await userStore.mettreAJourConnexion(phoneNumber.value);
+            console.log("✅ Utilisateur existant, redirection vers le dashboard");
+            router.push("/dashboard");
+          } else {
+            // Utilisateur n'existe pas, redirection vers la page d'informations utilisateur
+            console.log("❌ Utilisateur non trouvé, redirection vers user-info");
+            router.push("/user-info");
+          }
+        } else {
+          // Erreur lors de la vérification, rediriger vers user-info par défaut
+          console.error("❌ Erreur lors de la vérification utilisateur:", userCheck.message);
+          errorMessage.value = "Erreur lors de la vérification de l'utilisateur";
+          showErrorModal.value = true;
+        }
       } else {
         console.error("❌ Échec vérification OTP:", result);
         errorMessage.value = result.message || "Code incorrect ou expiré";
