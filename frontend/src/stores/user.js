@@ -179,3 +179,47 @@ export const useUserStore = defineStore("user", () => {
     clearError
   };
 });
+
+export const useSignupStore = defineStore('signup', {
+  state: () => ({
+    phone_number: '', // /phone
+    profile_picture: null, // /user-info
+    full_name: '', // /user-info
+    country: '', // /user-info
+    annee_experience: '', // /business-experience
+    mode_management: '', // /business-process
+    methode_contact: '', // /contact-method
+  }),
+  actions: {
+    setPhoneNumber(phone) {
+      this.phone_number = phone;
+    },
+    setProfilePicture(pic) {
+      this.profile_picture = pic;
+    },
+    setFullName(name) {
+      this.full_name = name;
+    },
+    setCountry(country) {
+      this.country = country;
+    },
+    setAnneeExperience(val) {
+      this.annee_experience = val;
+    },
+    setModeManagement(val) {
+      this.mode_management = val;
+    },
+    setMethodeContact(val) {
+      this.methode_contact = val;
+    },
+    reset() {
+      this.phone_number = '';
+      this.profile_picture = null;
+      this.full_name = '';
+      this.country = '';
+      this.annee_experience = '';
+      this.mode_management = '';
+      this.methode_contact = '';
+    }
+  }
+});

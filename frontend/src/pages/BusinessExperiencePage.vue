@@ -37,8 +37,10 @@ import { useRouter } from "vue-router";
 import VAppLayout from "../components/organisms/VAppLayout.vue";
 import VOption from "../components/atoms/VOption.vue";
 import VButton from "../components/atoms/VButton.vue";
+import { useSignupStore } from '../stores/user.js';
 
 const router = useRouter();
+const signup = useSignupStore();
 
 const selectedExperience = ref("");
 
@@ -50,6 +52,7 @@ const experienceOptions = [
 
 const handleContinue = () => {
   if (selectedExperience.value) {
+    signup.setAnneeExperience(selectedExperience.value);
     router.push("/business-process");
   }
 };

@@ -37,8 +37,10 @@ import { useRouter } from "vue-router";
 import VAppLayout from "../components/organisms/VAppLayout.vue";
 import VOption from "../components/atoms/VOption.vue";
 import VButton from "../components/atoms/VButton.vue";
+import { useSignupStore } from '../stores/user.js';
 
 const router = useRouter();
+const signup = useSignupStore();
 
 const selectedContact = ref("social-media"); // Default selection from design
 
@@ -51,6 +53,7 @@ const contactOptions = [
 
 const handleContinue = () => {
   if (selectedContact.value) {
+    signup.setMethodeContact(selectedContact.value);
     router.push("/success");
   }
 };

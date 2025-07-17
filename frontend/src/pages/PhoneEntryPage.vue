@@ -120,8 +120,10 @@ import VInput from "../components/atoms/VInput.vue";
 import VButton from "../components/atoms/VButton.vue";
 import otpService from "../services/otpService";
 import userService from "../services/userService";
+import { useSignupStore } from '../stores/user.js';
 
 const router = useRouter();
+const signup = useSignupStore();
 
 // === STATE MANAGEMENT ===
 const countryCode = ref("+237");
@@ -187,7 +189,8 @@ const handleContinue = async () => {
       if (result.success) {
         confirmationMessage.value =
           "Un code a été envoyé à votre numéro.";
-        // Optionnel : attendre un peu avant de naviguer
+        // Stocker le numéro dans le store Pinia
+        signup.setPhoneNumber(fullPhoneNumber.value);
         setTimeout(() => {
           router.push("/otp");
         }, 1200);

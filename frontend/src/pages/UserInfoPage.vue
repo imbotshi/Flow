@@ -108,10 +108,11 @@ import VAppLayout from "../components/organisms/VAppLayout.vue";
 import VInput from "../components/atoms/VInput.vue";
 import VButton from "../components/atoms/VButton.vue";
 import VPhotoUpload from "../components/molecules/VPhotoUpload.vue";
-import { useUserStore } from "../stores/user.js";
+import { useUserStore, useSignupStore } from "../stores/user.js";
 
 const router = useRouter();
 const userStore = useUserStore();
+const signup = useSignupStore();
 
 // === STATE MANAGEMENT ===
 const profilePhoto = ref(null);
@@ -403,6 +404,10 @@ const handleContinue = async () => {
         profilePhoto: photoBase64 || null
       };
       localStorage.setItem('userInfo', JSON.stringify(userInfo));
+      // Stocker les infos dans le store Pinia
+      signup.setFullName(fullName.value.trim());
+      signup.setCountry(country.value ? country.value.label : "");
+      signup.setProfilePicture(photoBase64 || null);
       // ... (tu peux aussi envoyer ces infos au backend ici si besoin)
       // Afficher succès et passer à la suite
       const formSection = document.querySelector('[data-bind="form-fields-section"]');
