@@ -66,15 +66,21 @@ const optionClasses = computed(() => [
   border-color: rgba(21, 61, 28, 0.8);
 }
 
-.v-option--selected {
-  background: #31920b;
-  color: #fff;
+.v-option--selected,
+.v-option--selected:focus,
+.v-option--selected:active,
+.v-option--selected:hover {
+  background: #43c300 !important;
+  color: #fff !important;
   font-weight: 500;
-  border-color: #31920b;
+  border-color: #43c300 !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
 }
 
 .v-option--green.v-option--selected {
-  background: #31920b;
+  background: #43c300;
 }
 
 .v-option--disabled {

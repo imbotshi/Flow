@@ -2,7 +2,7 @@
   <div class="photo-upload" :class="uploadClasses" data-bind="photo-upload">
     <!-- Upload Area -->
     <div
-      class="upload-area"
+      class="upload-area custom-upload-area"
       :class="areaClasses"
       data-bind="upload-area"
       @click="triggerFileInput"
@@ -50,14 +50,13 @@
       </div>
 
       <!-- Upload Placeholder -->
-      <div v-else class="upload-placeholder" data-bind="upload-placeholder">
-        <div class="upload-icon" data-bind="upload-icon">
-          <UploadIcon />
-        </div>
-        <div class="upload-text" data-bind="upload-text">
-          <p class="upload-label">{{ label }}</p>
-          <p class="upload-hint">{{ hint }}</p>
-        </div>
+      <div v-else class="upload-placeholder custom-upload-placeholder" data-bind="upload-placeholder">
+        <button type="button" class="custom-upload-plus" aria-label="Ajouter une photo" @click.stop="triggerFileInput">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="12" fill="#31920b"/>
+            <path d="M12 7v10M7 12h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
       </div>
 
       <!-- Loading State -->
@@ -747,5 +746,51 @@ onUnmounted(cleanup);
     min-height: 44px;
     min-width: 44px;
   }
+}
+
+.custom-upload-area {
+  width: 120px;
+  height: 120px;
+  border-radius: 18px;
+  background: #f5ff3b;
+  border: 2.5px dashed #31920b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin: 0 auto;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+.custom-upload-area:focus,
+.custom-upload-area:focus-visible {
+  outline: none;
+  border-color: #153d1c;
+}
+.custom-upload-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  position: relative;
+}
+.custom-upload-plus {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.custom-upload-plus svg {
+  display: block;
 }
 </style>

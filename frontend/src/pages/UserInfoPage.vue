@@ -17,14 +17,17 @@
         <section class="form-fields-section" data-bind="form-fields-section">
           <!-- Photo Upload -->
           <div class="photo-upload-wrapper" data-bind="photo-upload-wrapper">
-            <VPhotoUpload
-              v-model="profilePhoto"
-              label="Photo de profil"
-              class="profile-photo-upload"
-              data-bind="profile-photo-upload"
-              :data-error="errors.photo"
-              aria-label="Télécharger votre photo de profil"
-            />
+            <div style="width:100%;display:flex;flex-direction:column;align-items:flex-start;">
+              <label style="margin-bottom:8px;font-size:16px;color:#153d1c;">Photo de profil</label>
+              <VPhotoUpload
+                v-model="profilePhoto"
+                class="profile-photo-upload"
+                data-bind="profile-photo-upload"
+                :data-error="errors.photo"
+                aria-label="Télécharger votre photo de profil"
+                shape="rounded"
+              />
+            </div>
           </div>
 
           <!-- Full Name Input -->
@@ -44,17 +47,27 @@
 
           <!-- Country Input -->
           <div class="input-wrapper" data-bind="country-wrapper">
-            <VInput
-              v-model="country"
-              placeholder="Pays de résidence"
-              variant="user-info"
-              class="country-input"
-              data-bind="country-input"
-              :data-error="errors.country"
-              aria-label="Saisir votre pays de résidence"
-              autocomplete="country"
-              required
-            />
+            <div class="input-container input-container--base country-input-container" :data-error="errors.country">
+              <img v-if="country && country.flag" :src="country.flag" :alt="country.label + ' flag'" width="28" height="20" style="margin-right:12px;vertical-align:middle;" />
+              <input
+                v-model="countryInput"
+                @input="onCountryInput"
+                @focus="showCountryList = true"
+                @blur="onCountryBlur"
+                :placeholder="'Pays de résidence'"
+                class="input-field"
+                :aria-label="'Saisir votre pays de résidence'"
+                autocomplete="off"
+                required
+                style="flex:1;min-width:0;background:transparent;border:none;outline:none;font-size:18px;color:var(--primary-green,#153d1c);"
+              />
+            </div>
+            <ul v-if="showCountryList && filteredCountries.length" style="position:absolute;z-index:10;left:0;right:0;max-height:180px;overflow:auto;background:#fff;border:1px solid #ccc;border-radius:0 0 12px 12px;margin:0;padding:0;list-style:none;">
+              <li v-for="option in filteredCountries" :key="option.code" @mousedown.prevent="selectCountry(option)" style="display:flex;align-items:center;padding:8px 12px;cursor:pointer;">
+                <img :src="option.flag" :alt="option.label + ' flag'" width="24" height="16" style="margin-right:8px;vertical-align:middle;"/>
+                <span>{{ option.label }}</span>
+              </li>
+            </ul>
           </div>
         </section>
 
@@ -89,7 +102,7 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from "vue";
+import { ref, computed, reactive, watch } from "vue";
 import { useRouter } from "vue-router";
 import VAppLayout from "../components/organisms/VAppLayout.vue";
 import VInput from "../components/atoms/VInput.vue";
@@ -103,7 +116,8 @@ const userStore = useUserStore();
 // === STATE MANAGEMENT ===
 const profilePhoto = ref(null);
 const fullName = ref("");
-const country = ref("");
+const country = ref(null); // objet {label, code, flag}
+const countryInput = ref(""); // string pour la saisie utilisateur
 const isLoading = ref(false);
 const errors = reactive({
   photo: false,
@@ -111,34 +125,241 @@ const errors = reactive({
   country: false,
 });
 const errorMessage = ref("");
+const showCountryList = ref(false);
 
-// Conversion image en base64
-function toBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+// Liste complète des pays du monde en français avec code ISO et chemin SVG
+const countries = [
+  { label: 'Afghanistan', code: 'AF' },
+  { label: 'Afrique du Sud', code: 'ZA' },
+  { label: 'Albanie', code: 'AL' },
+  { label: 'Algérie', code: 'DZ' },
+  { label: 'Allemagne', code: 'DE' },
+  { label: 'Andorre', code: 'AD' },
+  { label: 'Angola', code: 'AO' },
+  { label: 'Arabie saoudite', code: 'SA' },
+  { label: 'Argentine', code: 'AR' },
+  { label: 'Arménie', code: 'AM' },
+  { label: 'Australie', code: 'AU' },
+  { label: 'Autriche', code: 'AT' },
+  { label: 'Azerbaïdjan', code: 'AZ' },
+  { label: 'Bahamas', code: 'BS' },
+  { label: 'Bahreïn', code: 'BH' },
+  { label: 'Bangladesh', code: 'BD' },
+  { label: 'Barbade', code: 'BB' },
+  { label: 'Belgique', code: 'BE' },
+  { label: 'Bénin', code: 'BJ' },
+  { label: 'Bhoutan', code: 'BT' },
+  { label: 'Biélorussie', code: 'BY' },
+  { label: 'Birmanie', code: 'MM' },
+  { label: 'Bolivie', code: 'BO' },
+  { label: 'Bosnie-Herzégovine', code: 'BA' },
+  { label: 'Botswana', code: 'BW' },
+  { label: 'Brésil', code: 'BR' },
+  { label: 'Brunei', code: 'BN' },
+  { label: 'Bulgarie', code: 'BG' },
+  { label: 'Burkina Faso', code: 'BF' },
+  { label: 'Burundi', code: 'BI' },
+  { label: 'Cambodge', code: 'KH' },
+  { label: 'Cameroun', code: 'CM' },
+  { label: 'Canada', code: 'CA' },
+  { label: 'Cap-Vert', code: 'CV' },
+  { label: 'Chili', code: 'CL' },
+  { label: 'Chine', code: 'CN' },
+  { label: 'Chypre', code: 'CY' },
+  { label: 'Colombie', code: 'CO' },
+  { label: 'Comores', code: 'KM' },
+  { label: 'Congo-Brazzaville', code: 'CG' },
+  { label: 'Congo-Kinshasa', code: 'CD' },
+  { label: "Corée du Nord", code: 'KP' },
+  { label: "Corée du Sud", code: 'KR' },
+  { label: 'Costa Rica', code: 'CR' },
+  { label: "Côte d'Ivoire", code: 'CI' },
+  { label: 'Croatie', code: 'HR' },
+  { label: 'Cuba', code: 'CU' },
+  { label: 'Danemark', code: 'DK' },
+  { label: 'Djibouti', code: 'DJ' },
+  { label: 'Dominique', code: 'DM' },
+  { label: 'Égypte', code: 'EG' },
+  { label: 'Émirats arabes unis', code: 'AE' },
+  { label: 'Équateur', code: 'EC' },
+  { label: 'Érythrée', code: 'ER' },
+  { label: 'Espagne', code: 'ES' },
+  { label: 'Estonie', code: 'EE' },
+  { label: 'Eswatini', code: 'SZ' },
+  { label: 'États-Unis', code: 'US' },
+  { label: 'Éthiopie', code: 'ET' },
+  { label: 'Fidji', code: 'FJ' },
+  { label: 'Finlande', code: 'FI' },
+  { label: 'France', code: 'FR' },
+  { label: 'Gabon', code: 'GA' },
+  { label: 'Gambie', code: 'GM' },
+  { label: 'Géorgie', code: 'GE' },
+  { label: 'Ghana', code: 'GH' },
+  { label: 'Grèce', code: 'GR' },
+  { label: 'Grenade', code: 'GD' },
+  { label: 'Guatemala', code: 'GT' },
+  { label: 'Guinée', code: 'GN' },
+  { label: 'Guinée-Bissau', code: 'GW' },
+  { label: 'Guinée équatoriale', code: 'GQ' },
+  { label: 'Guyana', code: 'GY' },
+  { label: 'Haïti', code: 'HT' },
+  { label: 'Honduras', code: 'HN' },
+  { label: 'Hongrie', code: 'HU' },
+  { label: 'Inde', code: 'IN' },
+  { label: 'Indonésie', code: 'ID' },
+  { label: 'Irak', code: 'IQ' },
+  { label: 'Iran', code: 'IR' },
+  { label: 'Irlande', code: 'IE' },
+  { label: 'Islande', code: 'IS' },
+  { label: 'Israël', code: 'IL' },
+  { label: 'Italie', code: 'IT' },
+  { label: 'Jamaïque', code: 'JM' },
+  { label: 'Japon', code: 'JP' },
+  { label: 'Jordanie', code: 'JO' },
+  { label: 'Kazakhstan', code: 'KZ' },
+  { label: 'Kenya', code: 'KE' },
+  { label: 'Kirghizistan', code: 'KG' },
+  { label: 'Kiribati', code: 'KI' },
+  { label: 'Koweït', code: 'KW' },
+  { label: 'Laos', code: 'LA' },
+  { label: 'Lesotho', code: 'LS' },
+  { label: 'Lettonie', code: 'LV' },
+  { label: 'Liban', code: 'LB' },
+  { label: 'Libéria', code: 'LR' },
+  { label: 'Libye', code: 'LY' },
+  { label: 'Liechtenstein', code: 'LI' },
+  { label: 'Lituanie', code: 'LT' },
+  { label: 'Luxembourg', code: 'LU' },
+  { label: 'Macédoine du Nord', code: 'MK' },
+  { label: 'Madagascar', code: 'MG' },
+  { label: 'Malaisie', code: 'MY' },
+  { label: 'Malawi', code: 'MW' },
+  { label: 'Maldives', code: 'MV' },
+  { label: 'Mali', code: 'ML' },
+  { label: 'Malte', code: 'MT' },
+  { label: 'Maroc', code: 'MA' },
+  { label: 'Marshall', code: 'MH' },
+  { label: 'Maurice', code: 'MU' },
+  { label: 'Mauritanie', code: 'MR' },
+  { label: 'Mexique', code: 'MX' },
+  { label: 'Micronésie', code: 'FM' },
+  { label: 'Moldavie', code: 'MD' },
+  { label: 'Monaco', code: 'MC' },
+  { label: 'Mongolie', code: 'MN' },
+  { label: 'Monténégro', code: 'ME' },
+  { label: 'Mozambique', code: 'MZ' },
+  { label: 'Namibie', code: 'NA' },
+  { label: 'Nauru', code: 'NR' },
+  { label: 'Népal', code: 'NP' },
+  { label: 'Nicaragua', code: 'NI' },
+  { label: 'Niger', code: 'NE' },
+  { label: 'Nigéria', code: 'NG' },
+  { label: 'Norvège', code: 'NO' },
+  { label: 'Nouvelle-Zélande', code: 'NZ' },
+  { label: 'Oman', code: 'OM' },
+  { label: 'Ouganda', code: 'UG' },
+  { label: 'Ouzbékistan', code: 'UZ' },
+  { label: 'Pakistan', code: 'PK' },
+  { label: 'Palaos', code: 'PW' },
+  { label: 'Palestine', code: 'PS' },
+  { label: 'Panama', code: 'PA' },
+  { label: 'Papouasie-Nouvelle-Guinée', code: 'PG' },
+  { label: 'Paraguay', code: 'PY' },
+  { label: 'Pays-Bas', code: 'NL' },
+  { label: 'Pérou', code: 'PE' },
+  { label: 'Philippines', code: 'PH' },
+  { label: 'Pologne', code: 'PL' },
+  { label: 'Portugal', code: 'PT' },
+  { label: 'Qatar', code: 'QA' },
+  { label: 'Roumanie', code: 'RO' },
+  { label: 'Royaume-Uni', code: 'GB' },
+  { label: 'Russie', code: 'RU' },
+  { label: 'Rwanda', code: 'RW' },
+  { label: 'Saint-Christophe-et-Niévès', code: 'KN' },
+  { label: 'Saint-Marin', code: 'SM' },
+  { label: 'Saint-Vincent-et-les-Grenadines', code: 'VC' },
+  { label: 'Sainte-Lucie', code: 'LC' },
+  { label: 'Salomon', code: 'SB' },
+  { label: 'Salvador', code: 'SV' },
+  { label: 'Samoa', code: 'WS' },
+  { label: 'Sao Tomé-et-Principe', code: 'ST' },
+  { label: 'Sénégal', code: 'SN' },
+  { label: 'Serbie', code: 'RS' },
+  { label: 'Seychelles', code: 'SC' },
+  { label: 'Sierra Leone', code: 'SL' },
+  { label: 'Singapour', code: 'SG' },
+  { label: 'Slovaquie', code: 'SK' },
+  { label: 'Slovénie', code: 'SI' },
+  { label: 'Somalie', code: 'SO' },
+  { label: 'Soudan', code: 'SD' },
+  { label: 'Soudan du Sud', code: 'SS' },
+  { label: 'Sri Lanka', code: 'LK' },
+  { label: 'Suède', code: 'SE' },
+  { label: 'Suisse', code: 'CH' },
+  { label: 'Suriname', code: 'SR' },
+  { label: 'Syrie', code: 'SY' },
+  { label: 'Tadjikistan', code: 'TJ' },
+  { label: 'Tanzanie', code: 'TZ' },
+  { label: 'Tchad', code: 'TD' },
+  { label: 'Tchéquie', code: 'CZ' },
+  { label: 'Thaïlande', code: 'TH' },
+  { label: 'Timor oriental', code: 'TL' },
+  { label: 'Togo', code: 'TG' },
+  { label: 'Tonga', code: 'TO' },
+  { label: 'Trinité-et-Tobago', code: 'TT' },
+  { label: 'Tunisie', code: 'TN' },
+  { label: 'Turkménistan', code: 'TM' },
+  { label: 'Turquie', code: 'TR' },
+  { label: 'Tuvalu', code: 'TV' },
+  { label: 'Ukraine', code: 'UA' },
+  { label: 'Uruguay', code: 'UY' },
+  { label: 'Vanuatu', code: 'VU' },
+  { label: 'Vatican', code: 'VA' },
+  { label: 'Venezuela', code: 'VE' },
+  { label: 'Viêt Nam', code: 'VN' },
+  { label: 'Yémen', code: 'YE' },
+  { label: 'Zambie', code: 'ZM' },
+  { label: 'Zimbabwe', code: 'ZW' },
+].map(c => ({ ...c, flag: `/src/assets/flags/${c.code.toLowerCase()}.svg` }));
+
+const filteredCountries = computed(() => {
+  if (!countryInput.value) return countries;
+  return countries.filter(c => c.label.toLowerCase().includes(countryInput.value.toLowerCase()));
+});
+
+function selectCountry(option) {
+  country.value = option;
+  countryInput.value = option.label;
+  showCountryList.value = false;
+}
+
+function onCountryInput(e) {
+  countryInput.value = e.target.value;
+  showCountryList.value = true;
+  country.value = null;
+}
+
+function onCountryBlur() {
+  setTimeout(() => { showCountryList.value = false; }, 200); // laisse le temps de cliquer
 }
 
 // === COMPUTED VALUES ===
 const canContinue = computed(() => {
-  return fullName.value.trim().length > 5;
+  return fullName.value.trim().length > 5 && country.value && country.value.label;
 });
 
 const formData = computed(() => ({
   profilePhoto: profilePhoto.value,
   fullName: fullName.value.trim(),
-  country: country.value.trim(),
+  country: country.value ? country.value.label : "",
 }));
 
 // === METHODS ===
 const validateForm = () => {
   errors.fullName = fullName.value.trim().length <= 5;
   errors.photo = false; // Photo is optional
-  errors.country = false; // Pays optionnel
-  return !errors.fullName;
+  errors.country = !country.value || !country.value.label;
+  return !errors.fullName && !errors.country;
 };
 
 const showFieldError = (fieldName) => {
@@ -151,6 +372,7 @@ const handleContinue = async () => {
   errorMessage.value = "";
   if (!validateForm()) {
     if (errors.fullName) showFieldError("full-name");
+    if (errors.country) showFieldError("country");
     // Shake the form
     const formSection = document.querySelector('[data-bind="form-fields-section"]');
     formSection?.setAttribute("data-error", "true");
@@ -177,7 +399,7 @@ const handleContinue = async () => {
       const userInfo = {
         telephone,
         fullName: fullName.value.trim(),
-        country: country.value.trim(),
+        country: country.value ? country.value.label : "",
         profilePhoto: photoBase64 || null
       };
       localStorage.setItem('userInfo', JSON.stringify(userInfo));
@@ -198,6 +420,16 @@ const handleContinue = async () => {
   }
 };
 
+// Conversion image en base64
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 // === WATCHERS FOR REAL-TIME VALIDATION ===
 const clearFieldError = (fieldName) => {
   errors[fieldName] = false;
@@ -205,21 +437,17 @@ const clearFieldError = (fieldName) => {
   wrapper?.removeAttribute("data-error");
 };
 
-// Clear errors when user starts typing
 const handleFullNameInput = () => {
   if (errors.fullName && fullName.value.trim().length > 0) {
-    clearFieldError("fullName");
+    clearFieldError("full-name");
   }
 };
 
 const handleCountryInput = () => {
-  if (errors.country && country.value.trim().length > 0) {
+  if (errors.country && country.value && country.value.label) {
     clearFieldError("country");
   }
 };
-
-// Watch for input changes
-import { watch } from "vue";
 
 watch(fullName, handleFullNameInput);
 watch(country, handleCountryInput);
@@ -518,5 +746,29 @@ watch(country, handleCountryInput);
   .page-title {
     font-size: 22px;
   }
+}
+
+.country-input-container {
+  display: flex;
+  align-items: center;
+  gap: 11.847px;
+  border-radius: 21.325px;
+  background: var(--white, #fff);
+  border: 1.01px solid rgba(21, 61, 28, 0.24);
+  padding: 26.064px 18.956px;
+  transition: all var(--transition-normal);
+  width: 100%;
+  max-width: 383.852px;
+  min-height: 82.586px;
+  box-sizing: border-box;
+  position: relative;
+}
+.country-input-container:focus-within {
+  border-color: rgba(21, 61, 28, 0.64);
+  box-shadow: 0 0 0 3px rgba(21, 61, 28, 0.1);
+}
+.country-input-container[data-error="true"] {
+  border-color: var(--error-color, #eb002d);
+  box-shadow: 0 0 0 3px rgba(235, 0, 45, 0.1);
 }
 </style>
