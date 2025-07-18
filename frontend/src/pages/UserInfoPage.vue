@@ -109,6 +109,7 @@ import VInput from "../components/atoms/VInput.vue";
 import VButton from "../components/atoms/VButton.vue";
 import VPhotoUpload from "../components/molecules/VPhotoUpload.vue";
 import { useUserStore, useSignupStore } from "../stores/user.js";
+import userService from '../services/userService.js';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -396,25 +397,17 @@ const handleContinue = async () => {
         photoBase64 = await toBase64(profilePhoto.value);
         localStorage.setItem('userProfilePhoto', photoBase64);
       }
-      // Stocker toutes les infos dans localStorage
-      const userInfo = {
-        telephone,
-        fullName: fullName.value.trim(),
-        country: country.value ? country.value.label : "",
-        profilePhoto: photoBase64 || null
-      };
-      localStorage.setItem('userInfo', JSON.stringify(userInfo));
-      // Stocker les infos dans le store Pinia
+      // Stocker toutes les infos dans le store Pinia
+      signup.setPhoneNumber(telephone);
       signup.setFullName(fullName.value.trim());
       signup.setCountry(country.value ? country.value.label : "");
       signup.setProfilePicture(photoBase64 || null);
-      // ... (tu peux aussi envoyer ces infos au backend ici si besoin)
       // Afficher succès et passer à la suite
       const formSection = document.querySelector('[data-bind="form-fields-section"]');
-        formSection?.setAttribute("data-success", "true");
-        setTimeout(() => {
-          router.push("/business-experience");
-        }, 1000);
+      formSection?.setAttribute("data-success", "true");
+      setTimeout(() => {
+        router.push("/business-experience");
+      }, 1000);
     } catch (error) {
       errorMessage.value = error.message || "Erreur lors de la sauvegarde.";
       const formSection = document.querySelector('[data-bind="form-fields-section"]');

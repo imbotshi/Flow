@@ -1,7 +1,7 @@
 // Service pour la gestion des OTP (envoi et vérification)
 // À connecter à l'API backend
 
-const API_BASE = '/api/otp';
+const API_BASE = '/auth';
 
 export default {
   /**
@@ -29,12 +29,12 @@ export default {
       }
 
       console.log('🔍 Tentative d\'envoi OTP vers:', phone);
-      console.log('🔍 URL API:', `${API_BASE}/send`);
+      console.log('🔍 URL API:', `${API_BASE}/send-otp`);
       
-      const response = await fetch(`${API_BASE}/send`, {
+      const response = await fetch(`${API_BASE}/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone })
+        body: JSON.stringify({ telephone: phone })
       });
       
       console.log('📡 Réponse API OTP:', {
@@ -166,10 +166,10 @@ export default {
 
       console.log('🔍 Tentative de vérification OTP:', { phone, otpLength: otp.length });
       
-      const response = await fetch(`${API_BASE}/verify`, {
+      const response = await fetch(`${API_BASE}/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, otp })
+        body: JSON.stringify({ telephone: phone, otp })
       });
       
       console.log('📡 Réponse API vérification:', {

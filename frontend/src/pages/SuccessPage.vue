@@ -24,6 +24,7 @@ import VAppLayout from "../components/organisms/VAppLayout.vue";
 import VaniaLogo from "../components/atoms/VaniaLogo.vue";
 import TextStatus from "../components/atoms/TextStatus.vue";
 import { useSignupStore } from '../stores/user.js';
+import userService from '../services/userService.js';
 
 const router = useRouter();
 const status = ref('pending'); // 'pending', 'success', 'error'
@@ -34,26 +35,22 @@ const saveUser = async () => {
   status.value = 'pending';
   errorMessage.value = '';
   try {
-    const response = await fetch('/api/utilisateurs/finaliser-inscription', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        telephone: signup.phone_number,
-        profile_picture: signup.profile_picture,
-        full_name: signup.full_name,
-        country: signup.country,
-        annee_experience: signup.annee_experience,
-        mode_management: signup.mode_management,
-        methode_contact: signup.methode_contact
-      })
+    const result = await userService.finaliserInscription({
+      telephone: signup.phone_number || "",
+      profile_picture: signup.profile_picture || "",
+      full_name: signup.full_name || "",
+      country: signup.country || "",
+      annee_experience: signup.annee_experience || "",
+      mode_management: signup.mode_management || "",
+      methode_contact: signup.methode_contact || "",
+      profession: ""
     });
-    const data = await response.json();
-    if (data.success) {
+    if (result.success) {
       status.value = 'success';
       setTimeout(() => router.push('/dashboard'), 2000);
     } else {
       status.value = 'error';
-      errorMessage.value = data.message || 'Erreur lors de la sauvegarde.';
+      errorMessage.value = result.message || 'Erreur lors de la sauvegarde.';
     }
   } catch (e) {
     status.value = 'error';

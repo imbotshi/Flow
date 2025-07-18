@@ -14,36 +14,28 @@ class UserService {
   async verifierUtilisateur(telephone) {
     try {
       console.log('🔍 Vérification utilisateur:', telephone);
-      
-      const response = await fetch(`${API_BASE_URL}/utilisateurs/verifier`, {
+      const response = await fetch(`${API_BASE_URL}/user/exists`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ telephone })
       });
-
       const data = await response.json();
-      
       console.log('📋 Réponse vérification utilisateur:', data);
-      
       if (!response.ok) {
         throw new Error(data.message || 'Erreur lors de la vérification');
       }
-
       return {
         success: true,
         existe: data.existe,
-        profilComplet: data.profilComplet,
         message: data.message
       };
-
     } catch (error) {
       console.error('❌ Erreur vérification utilisateur:', error);
       return {
         success: false,
         existe: false,
-        profilComplet: false,
         message: error.message || 'Erreur lors de la vérification de l\'utilisateur'
       };
     }
@@ -162,6 +154,41 @@ class UserService {
         success: false,
         utilisateur: null,
         message: error.message || 'Erreur lors de la récupération de l\'utilisateur'
+      };
+    }
+  }
+
+  /**
+   * Finaliser l'inscription d'un utilisateur
+   * @param {Object} userData - Données complètes de l'utilisateur
+   * @returns {Promise<Object>} - Résultat de la finalisation
+   */
+  async finaliserInscription(userData) {
+    try {
+      console.log('🚀 Finalisation inscription:', userData);
+      const response = await fetch(`${API_BASE_URL}/user/finaliser-inscription`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData)
+      });
+      const data = await response.json();
+      console.log('📋 Réponse finalisation inscription:', data);
+      if (!response.ok) {
+        throw new Error(data.message || 'Erreur lors de la finalisation');
+      }
+      return {
+        success: true,
+        utilisateur: data.utilisateur,
+        message: data.message
+      };
+    } catch (error) {
+      console.error('❌ Erreur finalisation inscription:', error);
+      return {
+        success: false,
+        utilisateur: null,
+        message: error.message || 'Erreur lors de la finalisation de l\'inscription'
       };
     }
   }

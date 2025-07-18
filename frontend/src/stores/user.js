@@ -220,6 +220,7 @@ export const useSignupStore = defineStore('signup', {
       this.annee_experience = '';
       this.mode_management = '';
       this.methode_contact = '';
+      console.log('[VaniaFlow] Mémoire temporaire (signup store) vidée.');
     }
   }
 });

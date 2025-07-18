@@ -236,7 +236,8 @@ const handleValidate = async () => {
             router.push("/dashboard");
           } else {
             // Utilisateur n'existe pas, redirection vers la page d'informations utilisateur
-            console.log("❌ Utilisateur non trouvé, redirection vers user-info");
+            console.log("❌ Utilisateur non trouvé, redirection vers /user-info");
+            userStore.setTelephone(phoneNumber.value); // Stocke le numéro pour l'inscription
             router.push("/user-info");
           }
         } else {
