@@ -1,0 +1,114 @@
+### 📄 Product Requirement Document (PRD)
+**Nom du module :** Formulaire d’ajout de partenaire  
+**Technologie :** VueJS + TailwindCSS  
+**Objectif :** Corriger l’interface de gauche pour qu’elle corresponde parfaitement au rendu visuel de droite (espacement, typographie, alignement, boutons, champs dynamiques, design global).
+
+---
+
+## 1. 🧭 Objectif global
+L’interface doit présenter un formulaire clair, moderne, minimaliste et bien espacé, correspondant au visuel de droite. Chaque section doit être alignée, les champs bien délimités et les actions (boutons) visibles et intuitives.
+
+---
+
+## 2. 📐 Spécifications visuelles détaillées
+
+### 🎯 A. Titre principal
+- **Texte** : "Ajouter un nouveau partenaire"
+- **Taille** : `text-[28px]` (ou `text-2xl` à `text-[24px]` selon le breakpoint)
+- **Font-weight** : `font-semibold`
+- **Couleur** : `#153d1c` (`--primary-green`)
+- **Espacement inférieur** : `mb-[60px]`
+- **Alignement** : centré à gauche (padding horizontal `px-4` ou `px-6`)
+
+### 🎯 B. Upload Photo de profil
+- **Zone carrée** de 80x80px avec bordure `dashed`
+- **Couleur fond** : `#e8ff00` temporaire, doit être `light-gray` (#f5f5f5) ou image uploadée
+- **Icône** : cercle vert `+` centré en bas à droite
+- **Border Radius** : `rounded-xl`
+- **Padding** : `mt-4 mb-6`
+
+### 🎯 C. Champs d’information utilisateur
+Chaque champ se compose de :
+- **Icône à gauche** (24px)
+- **Label** : `Nom`, `Prénom`, `WhatsApp`, `Profession`, `Montant`, `Note`
+- **Valeur** : affichage "Vide" par défaut (en `text-gray-400`, `text-sm`, `italic`)
+- **Disposition** : Flex `justify-between items-center`, `gap-4`, `py-2`
+
+### 🎯 D. Sélection de type de bien
+- **Options** : `Bien`, `Maison` (style toggle)
+- **Sélection** : fond clair + puce colorée (vert ou jaune selon l’état)
+- **Police** : `text-sm`, `font-medium`
+- **Disposition** : Inline avec `gap-2` ou `gap-4`
+
+### 🎯 E. Champs spéciaux
+- **Date de paiement** : texte à droite (format `DD/MM/YYYY`, en `font-bold`)
+- **Mode de paiement** : "Virement" affiché en `text-green-900`, fond `#f5f5f5`, `px-2 py-1`, `rounded`
+
+### 🎯 F. Zone Note
+- Même style que les champs précédents, avec icône "texte"
+
+---
+
+## 3. 🎯 Boutons d'action
+
+### ✅ Enregistrer le partenaire
+- **Texte** : "Enregistrer le partenaire"
+- **Fond** : `#0b5444` (`--dark-green`)
+- **Texte** : blanc, `font-semibold`
+- **Icône** : 📦 ou symbole de validation (optionnel)
+- **Taille** : `w-full`, `py-3`, `rounded-full`
+- **Position** : `mt-8`
+
+### ✅ Annuler
+- **Fond** : blanc
+- **Bordure** : légère, `rounded-full`
+- **Texte** : `font-semibold`, couleur `#0b5444`
+- **Taille** : même que bouton précédent
+
+---
+
+## 4. 📦 Composants suggérés
+| Composant            | Rôle                            | Props attendues                           |
+|---------------------|----------------------------------|-------------------------------------------|
+| `ProfileUpload.vue` | Upload et aperçu de la photo    | `imageSrc`, `onUpload`                    |
+| `FieldRow.vue`      | Lignes d’infos utilisateur      | `label`, `icon`, `value`, `editable`      |
+| `SelectType.vue`    | Sélection Bien / Maison         | `selectedType`, `onChange`                |
+| `PaymentDate.vue`   | Sélection ou affichage date     | `value`, `onPickDate`                     |
+| `ActionButton.vue`  | Boutons d’action principaux     | `label`, `variant`, `onClick`, `icon`     |
+
+---
+
+## 5. 🎨 Thème et styles
+```css
+--primary-green:    #153d1c;
+--secondary-green:  #31920b;
+--accent-green:     #059c1f;
+--light-green:      #1ef524;
+--dark-green:       #0b5444;
+--white:            #ffffff;
+--light-gray:       #f5f5f5;
+--yellow-accent:    #fef200;
+```
+
+---
+
+## 6. 🧪 Critères de validation UI
+- [ ] Alignement parfait des champs
+- [ ] Espacements verticaux cohérents
+- [ ] Icônes bien positionnées (gauche des champs)
+- [ ] Couleurs de fond respectées
+- [ ] Boutons parfaitement centrés et responsives
+
+---
+
+## 7. 📁 Fichier à corriger
+```txt
+Component actuel : src/components/AddPartnerPage.vue
+Style : scoped Tailwind ou CSS-in-JS
+Objectif : harmoniser le layout, les espacements, les boutons et champs avec la maquette finale
+```
+
+---
+
+## 🔚 Résultat attendu
+Un formulaire clair, responsive, cohérent, minimaliste, reproduisant fidèlement la maquette de droite, incluant tous les champs fonctionnels et styles souhaités.

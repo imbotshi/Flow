@@ -1,5 +1,10 @@
 <template>
   <div class="buy-credits-page">
+    <!-- Solde de crédits -->
+    <div class="buy-credits-page__balance">
+      <span class="buy-credits-page__balance-label">Crédits disponibles :</span>
+      <span class="buy-credits-page__balance-value">{{ userCredits }}</span>
+    </div>
     <!-- Header -->
     <div class="buy-credits-page__header">
       <button class="buy-credits-page__back-btn" @click="goBack">
@@ -127,6 +132,7 @@
         (*) Le pack Départ est valable pendant 30 jours
       </p>
     </div>
+    <PopupSuccess :visible="showSuccessPopup" :message="successMessage" @close="showSuccessPopup = false" />
   </div>
 </template>
 
@@ -136,12 +142,13 @@ import { useRouter } from "vue-router";
 
 import VCard from "../components/atoms/VCard.vue";
 import VBadge from "../components/atoms/VBadge.vue";
+// @ts-ignore
 import VButton from "../components/atoms/VButton.vue";
 import BackIcon from "../components/atoms/icons/BackIcon.vue";
+// @ts-ignore
+import PopupSuccess from "../components/molecules/PopupSuccess.vue";
 
 const router = useRouter();
-
-const selectedPackage = ref<string>("");
 
 const packages = {
   depart: {
@@ -174,8 +181,15 @@ const packages = {
   },
 };
 
-const selectPackage = (packageId: string) => {
+type PackageKey = keyof typeof packages;
+const selectedPackage = ref<PackageKey | "">("");
+const userCredits = ref(12); // Simulation du solde utilisateur
+const showSuccessPopup = ref(false);
+const successMessage = ref('Achat de crédits effectué avec succès !');
+
+const selectPackage = (packageId: PackageKey) => {
   selectedPackage.value = packageId;
+  console.log(`[FRONTEND] [${new Date().toISOString()}] Sélection pack crédits: ${packageId}`);
 };
 
 const goBack = () => {
@@ -183,11 +197,9 @@ const goBack = () => {
 };
 
 const proceedToPayment = () => {
-  if (selectedPackage.value) {
-    router.push({
-      name: "PaymentMethod",
-      query: { package: selectedPackage.value },
-    });
+  if (selectedPackage.value && packages[selectedPackage.value]) {
+    console.log(`[FRONTEND] [${new Date().toISOString()}] Navigation vers page: /payment-method, Payload:`, { package: selectedPackage.value });
+    router.push({ name: 'PaymentMethod', query: { package: selectedPackage.value } });
   }
 };
 </script>
@@ -445,6 +457,30 @@ const proceedToPayment = () => {
   text-transform: uppercase;
   text-align: center;
   margin: 0;
+}
+
+.buy-credits-page__balance {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #153d1c;
+  margin-top: 18px;
+  margin-bottom: 8px;
+  padding-right: 8px;
+}
+.buy-credits-page__balance-label {
+  color: #6b7280;
+  font-size: 15px;
+  font-weight: 500;
+}
+.buy-credits-page__balance-value {
+  color: #31920b;
+  font-size: 18px;
+  font-weight: 800;
+  margin-left: 2px;
 }
 
 @media (min-width: 768px) {

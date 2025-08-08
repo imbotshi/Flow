@@ -1,0 +1,148 @@
+---
+alwaysApply: false
+---
+# PRD pour la page `/dashboard` et ses fonctionnalités principales
+
+## CONTEXTE
+
+L’utilisateur doit pouvoir gérer ses informations, ses relances, ses crédits, ses partenaires et accéder à l’assistance directement depuis la page `/dashboard`.
+
+---
+
+## OBJECTIF
+
+Créer une page **`/dashboard`** avec toutes les actions principales décrites ci-dessous, en respectant les bonnes pratiques UX et la charte graphique existante.
+
+---
+
+## STRUCTURE DES TÂCHES 
+
+### 1. **Architecture des Composants**
+
+* Créer les composants suivants :
+
+  * `DashboardMenu.vue` : contient le menu latéral ou dropdown avec les options :
+
+    * {Modifier mon profil}
+    * {Archive}
+    * {Déconnexion}
+    * {Passer à un niveau supérieur}
+    * {Membres}
+    * {Aide et service client}
+  * `PartnerCard.vue` : affiche un partenaire (nom, avatar, statut) et clic → redirige vers `/userinfopage`.
+  * `PopupSuccess.vue` et `PopupError.vue` : popups pour succès ou erreur (programmation relance, crédits insuffisants).
+
+* Réutiliser :
+
+  * `UserInfo.vue` pour la page `user-info`.
+  * Créer une page clonée `/user-info-modify` pour modification.
+
+---
+
+### 2. **Navigation & Routes**
+
+* Ajouter ou vérifier les routes :
+
+  * `/dashboard`
+  * `/user-info-modify`
+  * `/archives`
+  * `/credits`
+  * `/faq`
+  * `/userinfopage`
+
+---
+
+### 3. **Scénarios à Implémenter**
+
+#### **US1 – Modifier mon profil**
+
+* Depuis `/dashboard`, clic sur {Modifier mon profil} → route `/user-info-modify`.
+* Pré-remplir formulaire avec données actuelles de l’utilisateur.
+* Bouton **Modifier mon profil** → envoie `POST /user/update`.
+
+#### **US2 – Archives**
+
+* Clic sur {Archive} → `/archives`.
+* Afficher :
+
+  * Liste des relances (en cours, terminées).
+  * Bouton {Programmer le message} à côté des relances.
+
+    * Vérifier crédits → Si OK → envoyer relance + PopupSuccess.
+    * Si crédits insuffisants → PopupError avec CTA vers `/credits`.
+
+#### **US3 – Déconnexion**
+
+* Clic sur {Déconnexion} → clear session + redirect `/login`.
+
+#### **US4 – Passer à un niveau supérieur**
+
+* Clic → page `/credits` avec offres d’achat.
+
+#### **US5 – Membres**
+
+* Clic → liste des partenaires (avec `PartnerCard`).
+* Clic sur une carte → `/userinfopage`.
+
+#### **US6 – Aide et service client**
+
+* Clic → page `/faq`.
+
+#### **US7 – Acheter des crédits**
+
+* Bouton {Acheter des crédits} visible sur `/dashboard` → `/credits`.
+
+#### **US8 – Programmer le message**
+
+* Déjà couvert dans US2 (vérification des crédits avant envoi).
+
+#### **US9 – Afficher plus**
+
+* Clic → afficher stats supplémentaires (activité, logs).
+
+---
+
+### 4. **API Endpoints à Consommer**
+
+* `GET /user` → récupérer infos utilisateur.
+* `POST /user/update` → maj profil.
+* `GET /relances` → liste des relances.
+* `POST /relances/program` → programmer message.
+* `GET /credits` → solde + offres.
+* `POST /credits/purchase` → achat de crédits.
+
+---
+
+### 5. **UI & UX**
+
+* Layout : Responsive (mobile-first, desktop-friendly).
+* Menus : Dropdown (mobile), Sidebar (desktop).
+* Popups : Overlay centré, bouton **OK**.
+* Couleurs : Respecter charte existante.
+* Loader visible lors des requêtes API.
+
+---
+
+### 6. **Critères d’Acceptation**
+
+* Chaque option du dashboard redirige ou ouvre la page/action attendue.
+* Vérification crédits avant envoi relance.
+* Déconnexion sécurisée.
+* Popup visible pour succès/erreur.
+* Test fonctionnel complet avant livraison.
+
+---
+
+### 7. **Tech Stack**
+
+* **Frontend** : Vue.js (Nuxt si SSR nécessaire).
+* **Auth** : JWT token.
+* **Style** : Tailwind CSS.
+
+---
+
+## INSTRUCTION
+
+* Générer le code **Vue.js** des composants suivants :
+  `DashboardMenu.vue`, `PartnerCard.vue`, `PopupSuccess.vue`, `PopupError.vue`.
+* Générer les pages `/dashboard`, `/user-info-modify`

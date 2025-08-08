@@ -174,6 +174,7 @@ const handleContinue = async () => {
   if (canContinue.value && !isLoading.value) {
     isLoading.value = true;
     try {
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Vérification existence numéro:`, fullPhoneNumber.value);
       // Vérifier si le numéro existe déjà
       const verif = await userService.verifierUtilisateur(fullPhoneNumber.value);
       if (verif.existe) {
@@ -184,14 +185,17 @@ const handleContinue = async () => {
       }
       // Stocker le numéro pour la page OTP
       localStorage.setItem('otpPhone', fullPhoneNumber.value);
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Action: Envoi OTP, Payload:`, { phone: fullPhoneNumber.value });
       // Appel mock OTP
       const result = await otpService.sendOtp(fullPhoneNumber.value);
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Résultat envoi OTP:`, result);
       if (result.success) {
         confirmationMessage.value =
           "Un code a été envoyé à votre numéro.";
         // Stocker le numéro dans le store Pinia
         signup.setPhoneNumber(fullPhoneNumber.value);
         setTimeout(() => {
+          console.log(`[FRONTEND] [${new Date().toISOString()}] Navigation vers page: /otp`);
           router.push("/otp");
         }, 1200);
       } else {
@@ -201,6 +205,7 @@ const handleContinue = async () => {
     } catch (error) {
       confirmationMessage.value =
         error.message || "Erreur lors de l'envoi du code.";
+      console.error(`[FRONTEND] [${new Date().toISOString()}] Erreur envoi OTP:`, error);
     } finally {
       isLoading.value = false;
     }

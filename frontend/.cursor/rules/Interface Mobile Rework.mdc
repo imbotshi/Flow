@@ -1,0 +1,128 @@
+### 📄 Product Requirement Document (PRD)
+**Nom du module :** Interface Mobile - Relances Groupées & Statuts des partenaires  
+**Technologie :** VueJS + CSS/Tailwind + Composants atomiques  
+**Objectif :** Aligner le rendu visuel actuel (gauche) avec le rendu cible (droite) en appliquant rigoureusement les règles de spacing, typographie, layout et contenu dynamique.
+
+---
+
+## 1. 🧭 Objectif global
+Reproduire fidèlement **l'espacement, l'alignement et les styles** de l'interface de droite, en corrigeant la version gauche développée en VueJS. La version finale doit suivre un **design pixel-perfect** par rapport à la maquette cible.
+
+---
+
+## 2. 📐 Directives visuelles précises
+
+### 🎯 A. Section “Mes partenaires en un coup d’œil”
+
+#### ✅ 1. Carte “En Retard”, “Échéance dans 12j”, etc.
+- **Dimensions** : Largeur fixe (≈ 140px), hauteur fixe (≈ 160px)
+- **Border Radius** : `rounded-2xl`
+- **Écart horizontal entre cartes** : `gap-x-4`
+- **Contenu centré verticalement et horizontalement**
+- **Couleurs exactes :**
+  - En Retard : `#ef1524`
+  - Échéance : `#fb9700`
+- **Police :**
+  - Nom : Figtree (primary)
+  - Nom du partenaire : `font-semibold`, `text-md`
+  - Métier : `text-sm`, `text-gray-700`
+- **Photo de profil visible**
+
+#### ✅ 2. Alignement général
+- **Titre** : "Mes partenaires en un coup d’œil..."
+  - Couleur : `#0b5444`
+  - Font-weight : `font-semibold`
+  - Margin-bottom : `mb-2`
+- **Disposer en ligne avec overflow-x scrollable**
+
+---
+
+### 🎯 B. Section “Mes relances groupées”
+
+#### ✅ 1. Bloc de message
+- **Padding** : `p-4`
+- **Background** : `#f5f5f5`
+- **Bordure arrondie** : `rounded-xl`
+- **Police** :
+  - `text-sm`
+  - Variables `{{utilisateur}}`, `{{date}}` : `font-bold`
+- **Icône WhatsApp** : Alignée en bas à droite, `text-xs`, texte `Synchronisé sur`
+
+---
+
+### 🎯 C. Date et Heure de la relance
+- **Disposition** : 2 blocs côte à côte
+- **Style** :
+  - Background : `#fff9cc`
+  - Padding : `py-2 px-4`
+  - Border Radius : `rounded-md`
+  - Police : `text-sm`, `text-center`
+
+---
+
+### 🎯 D. Relances automatiques
+- **Titre** : `font-semibold`, `text-dark-green`, `mb-2`
+- **Boutons** :
+  - Martin (supprimer) : fond `#0b5444`, texte blanc, `py-2 px-4`, `rounded-full`
+  - Ajouter : idem + icône
+- **Toggle switch** :
+  - Style personnalisé, `scale-90`
+  - Activé : `bg-dark-green`
+- **Icône utilisateur flottante jaune** :
+  - Couleur : `#fef200`, taille ≈ 48px, `rounded-full`
+  - Position : `fixed`, `bottom-4 right-4`
+
+---
+
+## 3. 🔄 Comportements dynamiques
+- Statut dynamique selon l’état du paiement
+- Données injectées dynamiquement : nom, rôle, photo, date, texte relance
+
+---
+
+## 4. 📦 Composants recommandés
+| Nom du composant      | Usage                                | Props attendues                        |
+|-----------------------|--------------------------------------|----------------------------------------|
+| `PartnerCard.vue`     | Carte partenaire                      | `status`, `name`, `role`, `avatar`     |
+| `ReminderBlock.vue`   | Bloc de relance                      | `message`, `date`, `heure`, `whatsapp` |
+| `RelanceButton.vue`   | Boutons circulaires relances         | `label`, `onClick`, `variant`          |
+| `ToggleSwitch.vue`    | Switch activable                     | `isActive`, `onToggle`                 |
+
+---
+
+## 5. 🎨 Variables de thème à respecter
+```css
+--primary-green:    #153d1c;
+--secondary-green:  #31920b;
+--accent-green:     #059c1f;
+--light-green:      #1ef524;
+--dark-green:       #0b5444;
+--medium-green:     #15a357;
+--white:            #ffffff;
+--light-gray:       #f5f5f5;
+--cream:            #fff9cc;
+--orange:           #fb9700;
+--dark-text:        #0a0200e;
+```
+
+---
+
+## 6. 🧪 Tests de conformité visuelle
+- [ ] Espacement et `padding` exacts
+- [ ] Typographies correctes
+- [ ] Aucune distorsion ou `overflow`
+- [ ] Couleurs identiques à la maquette cible
+
+---
+
+## 7. 📁 Fichier à corriger
+```txt
+Component actuel : src/components/DashboardMobile.vue
+Style : scoped Tailwind ou CSS-in-JS
+Objectif : modifier uniquement le layout / les classes Tailwind / props
+```
+
+---
+
+## 🔚 Résultat attendu
+Une interface mobile totalement alignée sur la capture de droite, en cohérence avec la charte graphique, les composants réutilisables, et un affichage parfait sur mobile 360px.

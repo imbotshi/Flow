@@ -79,6 +79,7 @@
 <script setup>
 import { ref, computed, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { useUserStore } from "../stores/user.js";
 import VAppLayout from "../components/organisms/VAppLayout.vue";
 import VCodeInput from "../components/atoms/VCodeInput.vue";
 import VButton from "../components/atoms/VButton.vue";
@@ -86,6 +87,7 @@ import VCountdownTimer from "../components/molecules/VCountdownTimer.vue";
 import otpService from "../services/otpService";
 
 const router = useRouter();
+const userStore = useUserStore();
 
 // === STATE MANAGEMENT ===
 const otpCode = ref("");
@@ -142,17 +144,20 @@ const handleContinue = async () => {
 
   if (canContinue.value && !isLoading.value) {
     isLoading.value = true;
-
     try {
-      // Appel réel au service OTP
-      // Il faut récupérer le numéro de téléphone utilisé (à stocker dans le store ou localStorage)
       const phone = localStorage.getItem('otpPhone') || '';
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Action: Validation OTP, Payload:`, { phone, code: otpCode.value });
       const result = await otpService.verifyOtp(phone, otpCode.value);
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Résultat validation OTP:`, result);
       if (result.success) {
-        // Show success state
-        const codeWrapper = document.querySelector(
-          '[data-bind="code-input-wrapper"]',
-        );
+        if (result.user) {
+          userStore.utilisateur = result.user;
+          console.log(`[FRONTEND] [${new Date().toISOString()}] Données utilisateur chargées dans le store:`, result.user);
+        } else {
+          await userStore.verifierUtilisateur(phone);
+          console.log(`[FRONTEND] [${new Date().toISOString()}] Chargement profil utilisateur via store.`);
+        }
+        const codeWrapper = document.querySelector('[data-bind="code-input-wrapper"]');
         codeWrapper?.setAttribute("data-success", "true");
         setTimeout(() => {
           router.push("/user-info");
@@ -161,14 +166,11 @@ const handleContinue = async () => {
         throw new Error(result.message || "Code OTP incorrect");
       }
     } catch (error) {
+      console.error(`[FRONTEND] [${new Date().toISOString()}] Erreur validation OTP:`, error);
       errors.otp = true;
       errorMessage.value = error.message || "Code OTP incorrect";
-      // Show error state
-      const codeWrapper = document.querySelector(
-        '[data-bind="code-input-wrapper"]',
-      );
+      const codeWrapper = document.querySelector('[data-bind="code-input-wrapper"]');
       codeWrapper?.setAttribute("data-error", "true");
-      // Clear OTP input for retry
       otpCode.value = "";
     } finally {
       isLoading.value = false;

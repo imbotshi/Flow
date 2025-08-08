@@ -749,11 +749,11 @@ onUnmounted(cleanup);
 }
 
 .custom-upload-area {
-  width: 120px;
-  height: 120px;
-  border-radius: 18px;
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
   background: #f5ff3b;
-  border: 2.5px dashed #31920b;
+  border: 2px dashed #153d1c;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -777,10 +777,10 @@ onUnmounted(cleanup);
 }
 .custom-upload-plus {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
-  width: 36px;
-  height: 36px;
+  bottom: -8px;
+  right: -8px;
+  width: 32px;
+  height: 32px;
   border: none;
   background: none;
   padding: 0;

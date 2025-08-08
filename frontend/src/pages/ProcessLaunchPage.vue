@@ -20,6 +20,13 @@
           {{ processStatus === "completed" ? "Terminé" : "En cours" }}
         </VBadge>
       </div>
+      <!-- Ajout bouton modifier la date -->
+      <div class="date-row">
+        <span>Date de relance : {{ formattedDate }}</span>
+        <button class="edit-date-btn" @click="showDateModal = true" aria-label="Modifier la date">
+          <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><path d="M17.5 6.5L13.5 2.5C13.1022 2.10218 12.5978 1.87868 12.0625 1.87868C11.5272 1.87868 11.0228 2.10218 10.625 2.5L3.75 9.375V13.75H8.125L15 6.875C15.3978 6.47722 15.6213 5.97282 15.6213 5.4375C15.6213 4.90218 15.3978 4.39778 15 4Z" stroke="#31920b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
 
       <!-- Process Steps -->
       <div class="process-steps">
@@ -87,6 +94,13 @@
             <p class="partner-status" :class="partner.status">
               {{ getStatusText(partner.status) }}
             </p>
+            <div class="partner-message-row">
+              <span class="partner-message-label">Message :</span>
+              <span class="partner-message-content">{{ partner.message || 'Aucun message personnalisé' }}</span>
+              <button class="edit-message-btn" @click="openMessageModal(partner)">
+                <svg width="18" height="18" fill="none" viewBox="0 0 20 20"><path d="M17.5 6.5L13.5 2.5C13.1022 2.10218 12.5978 1.87868 12.0625 1.87868C11.5272 1.87868 11.0228 2.10218 10.625 2.5L3.75 9.375V13.75H8.125L15 6.875C15.3978 6.47722 15.6213 5.97282 15.6213 5.4375C15.6213 4.90218 15.3978 4.39778 15 4Z" stroke="#31920b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
           </div>
           <VBadge
             :variant="partner.status === 'success' ? 'success' : 'error'"
@@ -96,6 +110,16 @@
           </VBadge>
         </div>
       </div>
+
+      <VModal :isVisible="showMessageModal" title="Modifier le message de relance" @close="showMessageModal = false">
+        <div class="modal-content">
+          <textarea v-model="editMessage" class="message-input" rows="5" placeholder="Saisir le message de relance..."></textarea>
+        </div>
+        <template #footer>
+          <button class="btn-secondary" @click="showMessageModal = false">Annuler</button>
+          <button class="btn-primary" @click="saveMessage">Valider</button>
+        </template>
+      </VModal>
     </VCard>
 
     <!-- Action Buttons -->
@@ -111,8 +135,37 @@
       >
         Nouveau lancement
       </button>
+      <button
+        v-if="processStatus !== 'completed'"
+        class="btn-danger"
+        @click="showCancelModal = true"
+      >
+        Annuler la relance
+      </button>
     </div>
+
+    <VModal :isVisible="showCancelModal" title="Annuler la relance" @close="showCancelModal = false">
+      <div class="modal-content">
+        <p>Pour confirmer l'annulation, saisissez le mot <b>ANNULER</b> :</p>
+        <input type="text" v-model="cancelWord" class="cancel-input" placeholder="Saisir ANNULER pour confirmer" />
+        <p v-if="cancelError" class="cancel-error">Mot incorrect. Veuillez saisir <b>ANNULER</b>.</p>
+      </div>
+      <template #footer>
+        <button class="btn-secondary" @click="showCancelModal = false">Fermer</button>
+        <button class="btn-danger" @click="confirmCancel">Confirmer</button>
+      </template>
+    </VModal>
   </div>
+
+  <VModal :isVisible="showDateModal" title="Modifier la date de relance" @close="showDateModal = false">
+    <div class="modal-content">
+      <input type="date" v-model="editDate" class="date-input" />
+    </div>
+    <template #footer>
+      <button class="btn-secondary" @click="showDateModal = false">Annuler</button>
+      <button class="btn-primary" @click="saveDate">Valider</button>
+    </template>
+  </VModal>
 </template>
 
 <script setup lang="ts">
@@ -122,6 +175,7 @@ import VCard from "@/components/atoms/VCard.vue";
 import VAvatar from "@/components/atoms/VAvatar.vue";
 import VBadge from "@/components/atoms/VBadge.vue";
 import BackIcon from "@/components/atoms/icons/BackIcon.vue";
+import VModal from '@/components/atoms/VModal.vue';
 
 interface ProcessStep {
   title: string;
@@ -135,6 +189,7 @@ interface PartnerResult {
   name: string;
   photo?: string;
   status: "success" | "failed";
+  message?: string; // Added message property
 }
 
 interface ProcessResults {
@@ -225,6 +280,40 @@ const launchNewProcess = () => {
   results.value = { successful: 0, failed: 0, total: 0 };
 };
 
+const showDateModal = ref(false);
+const relanceDate = ref(new Date());
+const editDate = ref(relanceDate.value.toISOString().substring(0,10));
+
+const formattedDate = computed(() => {
+  const d = relanceDate.value;
+  return d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+});
+
+function saveDate() {
+  relanceDate.value = new Date(editDate.value);
+  showDateModal.value = false;
+}
+
+const showMessageModal = ref(false);
+const editMessage = ref('');
+const editingPartnerId = ref<string | null>(null);
+
+const openMessageModal = (partner: PartnerResult) => {
+  editingPartnerId.value = partner.id;
+  editMessage.value = partner.message || '';
+  showMessageModal.value = true;
+};
+
+const saveMessage = () => {
+  if (editingPartnerId.value) {
+    const partner = partnerResults.value.find(p => p.id === editingPartnerId.value);
+    if (partner) {
+      partner.message = editMessage.value;
+    }
+  }
+  showMessageModal.value = false;
+};
+
 // Simulate process completion
 onMounted(() => {
   setTimeout(() => {
@@ -251,6 +340,26 @@ onMounted(() => {
     processStatus.value = "completed";
   }, 3000);
 });
+
+const showCancelModal = ref(false);
+const cancelWord = ref('');
+const cancelError = ref(false);
+
+const confirmCancel = () => {
+  if (cancelWord.value === 'ANNULER') {
+    processStatus.value = 'completed'; // Simulate cancellation
+    processSteps.value.forEach((step) => {
+      step.completed = true;
+      step.current = false;
+    });
+    results.value = { successful: 0, failed: 0, total: 0 };
+    showCancelModal.value = false;
+    cancelWord.value = '';
+    cancelError.value = false;
+  } else {
+    cancelError.value = true;
+  }
+};
 </script>
 
 <style scoped>
@@ -507,6 +616,49 @@ onMounted(() => {
   color: #eb002d;
 }
 
+.partner-message-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.partner-message-label {
+  font-family: "Figtree", sans-serif;
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 600;
+}
+
+.partner-message-content {
+  font-family: "Figtree", sans-serif;
+  font-size: 0.875rem;
+  color: #1a1a1a;
+  flex: 1;
+}
+
+.edit-message-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.edit-message-btn:hover {
+  background: #e1f52444;
+}
+
+.message-input {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  resize: vertical;
+}
+
 .actions {
   display: flex;
   flex-direction: column;
@@ -543,6 +695,62 @@ onMounted(() => {
 
 .btn-secondary:hover {
   background-color: #f8fff9;
+}
+
+.date-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+.edit-date-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.edit-date-btn:hover {
+  background: #e1f52444;
+}
+.date-input {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.btn-danger {
+  background-color: #eb002d;
+  color: white;
+  border: none;
+}
+
+.btn-danger:hover {
+  background-color: #c70020;
+}
+
+.modal-content {
+  padding: 1.5rem;
+}
+
+.cancel-input {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.cancel-error {
+  color: #eb002d;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
 }
 
 @media (min-width: 768px) {

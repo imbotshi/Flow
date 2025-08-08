@@ -17,20 +17,31 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    host: '0.0.0.0', // Écoute sur toutes les interfaces réseau
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://192.168.1.216:5000',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '')
       },
       '/auth': {
-        target: 'http://localhost:5000',
+        target: 'http://192.168.1.216:5000',
         changeOrigin: true,
         secure: false
       },
       '/user': {
-        target: 'http://localhost:5000',
+        target: 'http://192.168.1.216:5000',
+        changeOrigin: true,
+        secure: false
+      },
+      '/upload': {
+        target: 'http://192.168.1.216:5000',
+        changeOrigin: true,
+        secure: false
+      },
+      '/static': {
+        target: 'http://192.168.1.216:5000',
         changeOrigin: true,
         secure: false
       }

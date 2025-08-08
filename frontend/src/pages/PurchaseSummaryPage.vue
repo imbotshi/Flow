@@ -154,7 +154,7 @@ const goBack = () => {
 
 const processPayment = () => {
   // TODO: Implement payment processing
-  console.log("Processing payment for:", {
+  console.log(`[FRONTEND] [${new Date().toISOString()}] Action: Achat crédits, Payload:`, {
     package: selectedPackage.value,
     method: selectedMethod.value,
     amount: currentPackage.value.price,

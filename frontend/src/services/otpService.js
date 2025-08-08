@@ -31,13 +31,17 @@ export default {
       console.log('🔍 Tentative d\'envoi OTP vers:', phone);
       console.log('🔍 URL API:', `${API_BASE}/send-otp`);
       
-      const response = await fetch(`${API_BASE}/send-otp`, {
+      const url = `${API_BASE}/send-otp`;
+      const payload = { telephone: phone };
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Appel API: POST ${url}, Payload:`, payload);
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ telephone: phone })
+        body: JSON.stringify(payload)
       });
       
-      console.log('📡 Réponse API OTP:', {
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Réponse API OTP:`, {
         status: response.status,
         statusText: response.statusText,
         ok: response.ok,
@@ -135,7 +139,7 @@ export default {
    * Vérifie le code OTP saisi par l'utilisateur
    * @param {string} phone - Numéro de téléphone
    * @param {string} otp - Code OTP saisi
-   * @returns {Promise<{success: boolean, message?: string, details?: string}>}
+   * @returns {Promise<{success: boolean, message?: string, details?: string, user?: Object}>}
    */
   async verifyOtp(phone, otp) {
     try {
@@ -166,16 +170,21 @@ export default {
 
       console.log('🔍 Tentative de vérification OTP:', { phone, otpLength: otp.length });
       
-      const response = await fetch(`${API_BASE}/verify-otp`, {
+      const url = `${API_BASE}/verify-otp`;
+      const payload = { telephone: phone, otp };
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Appel API: POST ${url}, Payload:`, payload);
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ telephone: phone, otp })
+        body: JSON.stringify(payload)
       });
       
-      console.log('📡 Réponse API vérification:', {
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Réponse API vérification:`, {
         status: response.status,
         statusText: response.statusText,
-        ok: response.ok
+        ok: response.ok,
+        url: response.url
       });
       
       if (!response.ok) {
@@ -216,6 +225,51 @@ export default {
       
       const data = await response.json().catch(() => ({}));
       console.log('✅ Succès vérification OTP:', data);
+      
+      // Si la vérification réussit, récupérer les données utilisateur
+      if (data.success && data.token) {
+        try {
+          // Stocker le token pour les futures requêtes
+          localStorage.setItem('authToken', data.token);
+          
+          // Récupérer les données utilisateur
+          const userResponse = await fetch(`/utilisateurs/${phone}`, {
+            headers: {
+              'Authorization': `Bearer ${data.token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            console.log('✅ Données utilisateur récupérées:', userData);
+            
+            return { 
+              success: true, 
+              message: 'Code vérifié avec succès',
+              details: 'SUCCESS',
+              user: userData.utilisateur,
+              token: data.token
+            };
+          } else {
+            console.warn('⚠️ Impossible de récupérer les données utilisateur, mais OTP vérifié');
+            return { 
+              success: true, 
+              message: 'Code vérifié avec succès',
+              details: 'SUCCESS',
+              token: data.token
+            };
+          }
+        } catch (userError) {
+          console.warn('⚠️ Erreur lors de la récupération des données utilisateur:', userError);
+          return { 
+            success: true, 
+            message: 'Code vérifié avec succès',
+            details: 'SUCCESS',
+            token: data.token
+          };
+        }
+      }
       
       return { 
         success: true, 

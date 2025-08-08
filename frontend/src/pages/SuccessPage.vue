@@ -23,21 +23,44 @@ import { useRouter } from 'vue-router';
 import VAppLayout from "../components/organisms/VAppLayout.vue";
 import VaniaLogo from "../components/atoms/VaniaLogo.vue";
 import TextStatus from "../components/atoms/TextStatus.vue";
-import { useSignupStore } from '../stores/user.js';
+import { useSignupStore, useUserStore } from '../stores/user.js';
 import userService from '../services/userService.js';
+import uploadService from '../services/uploadService.js';
 
 const router = useRouter();
 const status = ref('pending'); // 'pending', 'success', 'error'
 const errorMessage = ref('');
 const signup = useSignupStore();
+const userStore = useUserStore();
 
 const saveUser = async () => {
   status.value = 'pending';
   errorMessage.value = '';
   try {
+    // D'abord, uploader la photo de profil si elle existe
+    let profilePictureFilename = '';
+    
+    if (signup.profile_picture) {
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Action: Upload photo profil, Payload:`, signup.profile_picture);
+      
+      // Convertir le base64 en fichier
+      const file = await uploadService.base64ToFile(signup.profile_picture, 'profile-photo.jpg');
+      
+      // Uploader le fichier
+      const uploadResult = await uploadService.uploadProfilePhoto(file, signup.phone_number);
+      
+      if (uploadResult.success) {
+        profilePictureFilename = uploadResult.filename;
+        console.log('✅ Photo uploadée avec succès:', profilePictureFilename);
+      } else {
+        console.warn('⚠️ Échec de l\'upload de la photo:', uploadResult.message);
+      }
+    }
+    
+    // Ensuite, finaliser l'inscription avec le nom du fichier
     const result = await userService.finaliserInscription({
       telephone: signup.phone_number || "",
-      profile_picture: signup.profile_picture || "",
+      profile_picture: profilePictureFilename, // Utiliser le nom du fichier au lieu du base64
       full_name: signup.full_name || "",
       country: signup.country || "",
       annee_experience: signup.annee_experience || "",
@@ -45,14 +68,23 @@ const saveUser = async () => {
       methode_contact: signup.methode_contact || "",
       profession: ""
     });
+    
     if (result.success) {
+      // Sauvegarder les données utilisateur dans le store principal
+      if (result.utilisateur) {
+        userStore.utilisateur = result.utilisateur;
+        console.log(`[FRONTEND] [${new Date().toISOString()}] Utilisateur sauvegardé dans le store:`, result.utilisateur);
+      }
+      
       status.value = 'success';
       setTimeout(() => router.push('/dashboard'), 2000);
     } else {
       status.value = 'error';
       errorMessage.value = result.message || 'Erreur lors de la sauvegarde.';
+      console.error(`[FRONTEND] [${new Date().toISOString()}] Erreur sauvegarde utilisateur:`, result);
     }
   } catch (e) {
+    console.error('❌ Erreur lors de la sauvegarde:', e);
     status.value = 'error';
     errorMessage.value = 'Erreur réseau ou serveur. Veuillez réessayer.';
   }

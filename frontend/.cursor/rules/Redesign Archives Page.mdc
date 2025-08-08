@@ -1,0 +1,104 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# PRD : Redesign de la page "Archives des relances" pour un style pixel-perfect inspiré de la maquette
+
+## 🎯 Objectif :
+
+Reproduire l'interface de gauche (actuelle) avec le style inspiré du visuel à droite, en respectant un alignement et une finition pixel-perfect.
+
+---
+
+## ✅ Contexte :
+
+* Projet : Vania Flow
+* Composant cible : `ArchivesPage.vue`
+* Fonction principale : Afficher la liste des relances archivées sous forme de cartes.
+* Style attendu : Minimaliste, moderne, inspiré du design médical professionnel, avec blocs colorés.
+
+---
+
+## 🏗 Structure à concevoir :
+
+1. **Header**
+
+   * Logo à gauche
+   * Titre "Archives des relances" centré ou aligné à gauche
+2. **Liste de cartes**
+
+   * Chaque carte doit contenir :
+
+     * Nom complet (titre principal)
+     * Statut (ex : En retard, Échéance dans 12j, Payé)
+     * Bouton principal : `Programmer le message`
+3. **Disposition**
+
+   * Cartes disposées verticalement
+   * Alignement homogène (espacement régulier entre chaque carte)
+
+---
+
+## 🎨 Directives UI :
+
+* **Cartes**
+
+  * Coins arrondis (radius 18px)
+  * Hauteur : \~120px
+  * Ombre légère (shadow)
+  * Background color dynamique en fonction du statut :
+
+    * Jaune clair → Échéance
+    * Bleu clair → Consultation
+    * Vert clair → Payé
+* **Bouton**
+
+  * Couleur : vert foncé `#153d1c`
+  * Texte blanc
+  * Coins arrondis (radius 10px)
+* **Typographie**
+
+  * Police : `Inter` ou équivalent
+  * Titre : 16px, bold
+  * Statut : 14px, italique
+* **Icônes décoratives** :
+
+  * Subtiles (comme dans le visuel de droite) en fond de carte
+* **Spacing**
+
+  * Padding interne cohérent
+  * Marges uniformes entre cartes (16px)
+
+---
+
+## ⚙️ Interactions :
+
+* Hover sur carte → légère élévation (`scale 1.02`)
+* Hover sur bouton → foncé légèrement (`#0f2e14`)
+* Responsive : s'adapte parfaitement sur mobile
+
+---
+
+## 🔍 Exigences pixel-perfect :
+
+* Respect strict des alignements
+* Espacements constants (header ↔ contenu, cartes ↔ entre elles)
+* Ratio texte / composant identique au visuel fourni
+* Utiliser une grille cohérente (8px system recommandé)
+
+---
+
+## ✅ Livrables attendus :
+
+1. Composant Vue.js (`ArchivesPage.vue`) avec le design demandé
+2. Styles conformes à la maquette
+3. Code prêt pour intégration dans projet Vue.js
+
+---
+
+### Notes :
+
+* Ne réutilise pas le design actuel (capture gauche), remplace-le complètement par le style inspiré de la capture droite.
+* Priorité à la lisibilité, harmonie et cohérence.
+* Utilise Tailwind ou SCSS pour la structuration CSS.

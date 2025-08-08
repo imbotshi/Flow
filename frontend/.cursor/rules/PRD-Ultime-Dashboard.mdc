@@ -1,0 +1,201 @@
+---
+alwaysApply: false
+---
+
+# ✅ Objectif
+
+Assurer la connexion correcte entre **Frontend ↔ Backend ↔ Base de données** pour la **page Dashboard**, avec synchronisation, authentification et mise à jour dynamique des données.
+
+---
+
+## ✅ Étape 0 : Pré-requis
+
+* **Technologies** : Vue.js ou React (Frontend), Node.js/Express (Backend), MongoDB (DB).
+* **Modèles** : User, Partner, Relance.
+* **Auth** : JWT (stockage token côté client).
+
+---
+
+## ✅ Étape 1 : Initialisation du Dashboard
+
+### Objectif :
+
+Charger les données utilisateur connectées et préparer le header.
+
+### Actions :
+
+* Créer fonction `getUserProfile()` dans **userService**.
+* Appeler **GET /user/profile** avec JWT.
+* Mapper les champs dans le state :
+
+  * `name`, `country`, `credits`, `photo`.
+
+### Validation :
+
+* Si token invalide → redirect `/login`.
+* Placeholder si données manquantes.
+
+---
+
+## ✅ Étape 2 : Menu Utilisateur
+
+### Objectif :
+
+Assurer les liens et les actions (modifier profil, archives, FAQ, etc.).
+
+### Actions :
+
+* Ajouter navigation :
+
+  * **Modifier profil** → GET /user/profile
+  * **Update profil** → PATCH /user/update
+* Vérifier redirection correcte.
+
+### Validation :
+
+* Données à jour après modification.
+
+---
+
+## ✅ Étape 3 : Carte d’Achat de Crédits
+
+### Objectif :
+
+Affichage dynamique + mise à jour après achat.
+
+### Actions :
+
+* Afficher `credits` depuis state `user`.
+* Bouton "Acheter crédits" :
+
+  * Appel API : **POST /credits/purchase**
+  * Mise à jour state user.
+
+### Validation :
+
+* Crédits refresh en temps réel après réponse backend.
+
+---
+
+## ✅ Étape 4 : Section "Mes partenaires en un coup d'œil"
+
+### Objectif :
+
+Lister partenaires + détails.
+
+### Actions :
+
+* Appel API : **GET /api/partners** (pagination, filtre).
+* Afficher `statut_relance`, avatar.
+* Clic sur partenaire → **GET /api/partners/\:id**.
+
+### Validation :
+
+* Message "Aucun partenaire" si liste vide.
+
+---
+
+## ✅ Étape 5 : Section "Mes relances groupées"
+
+### Objectif :
+
+Lister relances et planification.
+
+### Actions :
+
+* Liste → **GET /api/relances**.
+* Création → **POST /api/relances**.
+* Mise à jour → **PATCH /api/partners/\:id/relance**.
+* Vérifier décrémentation crédits.
+
+### Validation :
+
+* Synchronisation après action.
+
+---
+
+## ✅ Étape 6 : Actions récentes
+
+### Objectif :
+
+Historique en temps réel.
+
+### Actions :
+
+* Charger logs via **GET /api/actions/logs**.
+* Affichage timestamps relatifs.
+* Bouton "Afficher plus" → pagination.
+
+### Validation :
+
+* Test cas vide.
+
+---
+
+## ✅ Étape 7 : Modals & Popups
+
+### Objectif :
+
+Interactions UX critiques.
+
+### Actions :
+
+* Ajout partenaire → **POST /api/partners**.
+* Messages succès/erreur → reflètent status API.
+
+### Validation :
+
+* Gérer erreurs réseau/serveur.
+
+---
+
+## ✅ Étape 8 : Synchronisation & Sécurité
+
+### Objectif :
+
+Authentification et refresh.
+
+### Actions :
+
+* JWT sur chaque requête.
+* Refresh dashboard après action CRUD.
+* Gérer erreurs backend avec feedback UX.
+
+### Validation :
+
+* Scénarios : token expiré, crédits insuffisants.
+
+---
+
+## ✅ Étape 9 : Données Complémentaires & Stats
+
+### Objectif :
+
+Afficher infos enrichies et statistiques.
+
+### Actions :
+
+* Charger via **GET /api/relances/stats/overview**.
+* Vérifier cohérence avec modèle User/Relance.
+
+### Validation :
+
+* Test cohérence des données.
+
+---
+
+## ✅ Tests finaux
+
+* JWT valide/invalide.
+* Cohérence API ↔ affichage.
+* Performance (<3s/section).
+* Gestion erreurs (réseau, backend).
+
+---
+
+# ✅ Livrables
+
+* **Composants** : Header, Menu, Carte crédits, Sections dynamiques.
+* **Services API** : userService, partnerService, relanceService.
+* **Store global** : userData, credits, partners, relances.
+* **Tests automatisés** : scénarios critiques.

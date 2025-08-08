@@ -15,6 +15,9 @@ import BuyCreditsPage from "../pages/BuyCreditsPage.vue";
 import PaymentMethodPage from "../pages/PaymentMethodPage.vue";
 import PurchaseSummaryPage from "../pages/PurchaseSummaryPage.vue";
 import ProcessLaunchPage from "../pages/ProcessLaunchPage.vue";
+import UserInfoModifyPage from '../pages/UserInfoModifyPage.vue';
+import ArchivesPage from '../pages/ArchivesPage.vue';
+import FaqPage from '../pages/FaqPage.vue';
 
 const routes = [
   {
@@ -52,6 +55,11 @@ const routes = [
     meta: {
       title: "Informations utilisateur - Vania Flow",
     },
+  },
+  {
+    path: "/user-info-modify",
+    name: "UserInfoModify",
+    component: UserInfoModifyPage
   },
   {
     path: "/business-experience",
@@ -148,6 +156,16 @@ const routes = [
     meta: {
       title: "Lancement automatique - Vania Flow",
     },
+  },
+  {
+    path: '/archives',
+    name: 'Archives',
+    component: ArchivesPage
+  },
+  {
+    path: '/faq',
+    name: 'Faq',
+    component: FaqPage
   },
 ];
 

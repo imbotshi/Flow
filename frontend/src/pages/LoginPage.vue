@@ -150,24 +150,23 @@ const sendSecurityCode = async () => {
   if (phoneNumber.value && !isLoading.value) {
     isLoading.value = true;
     try {
-      console.log("🚀 Début envoi OTP pour:", phoneNumber.value);
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Action: Envoi OTP, Payload:`, { phone: phoneNumber.value });
       const result = await otpService.sendOtp(phoneNumber.value);
-      
-      console.log("📋 Résultat envoi OTP:", result);
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Résultat envoi OTP:`, result);
       
       if (result.success) {
         otpSent.value = true;
-        console.log("✅ OTP envoyé avec succès");
+        console.log(`[FRONTEND] [${new Date().toISOString()}] OTP envoyé avec succès.`);
         // Optionnel: afficher un message de succès
         // errorMessage.value = "Code envoyé avec succès !";
         // showErrorModal.value = true;
       } else {
-        console.error("❌ Échec envoi OTP:", result);
+        console.error(`[FRONTEND] [${new Date().toISOString()}] Échec envoi OTP:`, result);
         errorMessage.value = result.message || "Erreur lors de l'envoi du code";
         showErrorModal.value = true;
       }
     } catch (error) {
-      console.error("💥 Exception envoi OTP:", error);
+      console.error(`[FRONTEND] [${new Date().toISOString()}] Exception envoi OTP:`, error);
       errorMessage.value = "Erreur lors de l'envoi du code";
       showErrorModal.value = true;
     } finally {
@@ -209,50 +208,72 @@ const handleValidate = async () => {
   if (canValidate.value && !isLoading.value) {
     isLoading.value = true;
     try {
-      console.log("🔐 Début vérification OTP:", { 
-        phone: phoneNumber.value, 
-        codeLength: securityCode.value.length 
-      });
-      
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Action: Validation OTP, Payload:`, { phone: phoneNumber.value, code: securityCode.value });
       const result = await otpService.verifyOtp(phoneNumber.value, securityCode.value);
-      
-      console.log("📋 Résultat vérification OTP:", result);
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Résultat validation OTP:`, result);
       
       if (result.success) {
-        console.log("✅ OTP vérifié avec succès");
+        console.log(`[FRONTEND] [${new Date().toISOString()}] OTP vérifié avec succès.`);
         
         // Stocker le numéro de téléphone en mémoire tampon
         userStore.setTelephone(phoneNumber.value);
         
         // Vérifier si l'utilisateur existe dans la base de données
-        console.log("🔍 Vérification de l'existence de l'utilisateur...");
+        console.log(`[FRONTEND] [${new Date().toISOString()}] Vérification existence utilisateur...`);
         const userCheck = await userStore.verifierUtilisateur(phoneNumber.value);
         
         if (userCheck.success) {
           if (userCheck.existe) {
-            // Utilisateur existe, mettre à jour sa dernière connexion
+            // Utilisateur existe, les données sont déjà récupérées par verifierUtilisateur
+            console.log(`[FRONTEND] [${new Date().toISOString()}] Utilisateur existant, mise à jour connexion...`);
+            
+            // Mettre à jour sa dernière connexion
             await userStore.mettreAJourConnexion(phoneNumber.value);
-            console.log("✅ Utilisateur existant, redirection vers le dashboard");
-            router.push("/dashboard");
+            console.log(`[FRONTEND] [${new Date().toISOString()}] Connexion mise à jour.`);
+            console.log(`[FRONTEND] [${new Date().toISOString()}] Données utilisateur dans le store:`, userStore.utilisateur);
+            
+            // Vérifier que les données sont bien présentes
+            if (userStore.utilisateur) {
+              console.log(`[FRONTEND] [${new Date().toISOString()}] Utilisateur connecté avec succès:`, {
+                nom: userStore.utilisateur.nom,
+                telephone: userStore.utilisateur.telephone,
+                credits: userStore.utilisateur.credits
+              });
+              router.push("/dashboard");
+            } else {
+              console.error(`[FRONTEND] [${new Date().toISOString()}] Données utilisateur manquantes dans le store, tentative de récupération forcée...`);
+              
+              // Tentative de récupération forcée
+              const forceRecovery = await userStore.forcerRecuperationUtilisateur(phoneNumber.value);
+              
+              if (forceRecovery.success && userStore.utilisateur) {
+                console.log(`[FRONTEND] [${new Date().toISOString()}] Récupération forcée réussie:`, userStore.utilisateur);
+                router.push("/dashboard");
+              } else {
+                console.error(`[FRONTEND] [${new Date().toISOString()}] Échec de la récupération forcée.`);
+                errorMessage.value = "Erreur lors de la récupération des données utilisateur";
+                showErrorModal.value = true;
+              }
+            }
           } else {
             // Utilisateur n'existe pas, redirection vers la page d'informations utilisateur
-            console.log("❌ Utilisateur non trouvé, redirection vers /user-info");
+            console.log(`[FRONTEND] [${new Date().toISOString()}] Utilisateur non trouvé, redirection vers /user-info`);
             userStore.setTelephone(phoneNumber.value); // Stocke le numéro pour l'inscription
             router.push("/user-info");
           }
         } else {
           // Erreur lors de la vérification, rediriger vers user-info par défaut
-          console.error("❌ Erreur lors de la vérification utilisateur:", userCheck.message);
+          console.error(`[FRONTEND] [${new Date().toISOString()}] Erreur lors de la vérification utilisateur:`, userCheck.message);
           errorMessage.value = "Erreur lors de la vérification de l'utilisateur";
           showErrorModal.value = true;
         }
       } else {
-        console.error("❌ Échec vérification OTP:", result);
+        console.error(`[FRONTEND] [${new Date().toISOString()}] Échec vérification OTP:`, result);
         errorMessage.value = result.message || "Code incorrect ou expiré";
         showErrorModal.value = true;
       }
     } catch (error) {
-      console.error("💥 Exception vérification OTP:", error);
+      console.error(`[FRONTEND] [${new Date().toISOString()}] Erreur validation OTP:`, error);
       errorMessage.value = "Erreur lors de la validation";
       showErrorModal.value = true;
     } finally {

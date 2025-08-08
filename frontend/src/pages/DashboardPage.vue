@@ -6,19 +6,21 @@
         <div class="user-info">
           <div class="user-avatar">
             <img
-              src="https://api.builder.io/api/v1/image/assets/TEMP/01f5cbda9f8ae931a5d85847b4db7dc680bdee67?width=92"
-              alt="Profile de Eric Tshimba Lokole"
+              :src="userPhoto"
+              :alt="`Profile de ${userName}`"
               class="avatar-image"
+              loading="lazy"
             />
           </div>
           <div class="user-details">
             <div class="user-name-row">
-              <h1 class="user-name">Eric Tshimba Lokole</h1>
+              <h1 class="user-name">{{ userFullName }}</h1>
               <div class="dropdown-container">
                 <button
                   class="dropdown-btn"
-                  aria-label="Options utilisateur"
-                  @click="toggleUserMenu"
+                  aria-label="Menu utilisateur"
+                  @click="showDashboardMenu = !showDashboardMenu"
+                  tabindex="0"
                 >
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                     <path
@@ -35,62 +37,41 @@
                     />
                   </svg>
                 </button>
-                <div v-if="showUserMenu" class="dropdown-menu user-menu">
-                  <button class="dropdown-item" @click="editProfile">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path
-                        d="M8 8C10.2091 8 12 6.20914 12 4C12 1.79086 10.2091 0 8 0C5.79086 0 4 1.79086 4 4C4 6.20914 5.79086 8 8 8Z"
-                        fill="#153D1C"
-                      />
-                      <path
-                        d="M8 10C3.58172 10 0 13.5817 0 18H16C16 13.5817 12.4183 10 8 10Z"
-                        fill="#153D1C"
-                      />
-                    </svg>
-                    Modifier mon profil
-                  </button>
-                  <button class="dropdown-item" @click="openArchives">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path
-                        d="M2 2C2 1.44772 2.44772 1 3 1H13C13.5523 1 14 1.44772 14 2V14C14 14.5523 13.5523 15 13 15H3C2.44772 15 2 14.5523 2 14V2Z"
-                        fill="#153D1C"
-                      />
-                      <path
-                        d="M5 5H11M5 8H11M5 11H8"
-                        stroke="white"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                      />
-                    </svg>
-                    Archives
-                  </button>
-                  <button class="dropdown-item" @click="logout">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path
-                        d="M6 14H3C2.44772 14 2 13.5523 2 13V3C2 2.44772 2.44772 2 3 2H6M11 11L14 8L11 5M14 8H6"
-                        stroke="#153D1C"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                    Déconnexion
-                  </button>
-                </div>
+                <transition name="fade-slide">
+                  <DashboardMenu v-if="showDashboardMenu" @select="handleMenuSelect" style="position:absolute;top:110%;right:0;z-index:1001;" />
+                </transition>
               </div>
             </div>
             <div class="credits-info">
               <div class="country-flag">
                 <img
-                  src="https://api.builder.io/api/v1/image/assets/TEMP/e618e18f51d15f192c7dc0b848f9165b1b48142d?width=24"
-                  alt="Drapeau"
+                  :src="userCountryFlag"
+                  :alt="`Drapeau ${userCountry}`"
                   class="flag-icon"
+                  loading="lazy"
                 />
               </div>
               <div class="separator-dot"></div>
               <div class="credits-display">
-                <span class="credits-text">3 crédits</span>
-                <span class="credits-emoji">🪙</span>
+                <span class="credits-text">{{ userCredits }} crédits</span>
+                <svg 
+                  class="credits-icon" 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 16 16" 
+                  fill="none"
+                  aria-label="Icône de crédits"
+                >
+                  <defs>
+                    <linearGradient id="creditGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" style="stop-color:#31920b;stop-opacity:1" />
+                      <stop offset="100%" style="stop-color:#153d1c;stop-opacity:1" />
+                    </linearGradient>
+                  </defs>
+                  <circle cx="8" cy="8" r="7" fill="url(#creditGradient)" stroke="#31920b" stroke-width="0.5"/>
+                  <path d="M8 3L8 13M5 6L8 3L11 6" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="8" cy="10" r="1.5" fill="white" opacity="0.8"/>
+                </svg>
               </div>
             </div>
           </div>
@@ -99,7 +80,14 @@
           <button
             class="more-options-btn"
             aria-label="Plus d'options"
+            aria-haspopup="true"
+            :aria-expanded="showMoreMenu.toString()"
+            aria-controls="more-menu-dropdown"
             @click="toggleMoreMenu"
+            @keydown.down.prevent="focusFirstMoreMenuItem"
+            @keydown.enter.prevent="toggleMoreMenu"
+            @keydown.esc="closeMoreMenu"
+            tabindex="0"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path
@@ -128,167 +116,123 @@
               />
             </svg>
           </button>
-          <div v-if="showMoreMenu" class="dropdown-menu more-menu">
-            <button class="dropdown-item" @click="upgradePlan">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M8 1L8 15M8 1L12 5M8 1L4 5"
-                  stroke="#153D1C"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              Passer à un forfait supérieur
-            </button>
-            <button class="dropdown-item" @click="openMembers">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M5 6C6.10457 6 7 5.10457 7 4C7 2.89543 6.10457 2 5 2C3.89543 2 3 2.89543 3 4C3 5.10457 3.89543 6 5 6Z"
-                  fill="#153D1C"
-                />
-                <path
-                  d="M11 6C12.1046 6 13 5.10457 13 4C13 2.89543 12.1046 2 11 2C9.89543 2 9 2.89543 9 4C9 5.10457 9.89543 6 11 6Z"
-                  fill="#153D1C"
-                />
-                <path
-                  d="M5 8C2.23858 8 0 10.2386 0 13H10C10 10.2386 7.76142 8 5 8Z"
-                  fill="#153D1C"
-                />
-                <path
-                  d="M16 13C16 10.7909 14.2091 9 12 9C11.2808 9 10.6056 9.1892 10 9.52624"
-                  fill="#153D1C"
-                />
-              </svg>
-              Membres
-            </button>
-            <button class="dropdown-item" @click="openHelp">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <circle
-                  cx="8"
-                  cy="8"
-                  r="7"
-                  stroke="#153D1C"
-                  stroke-width="1.5"
-                />
-                <path
-                  d="M6.5 6C6.5 5.17157 7.17157 4.5 8 4.5C8.82843 4.5 9.5 5.17157 9.5 6C9.5 6.82843 8.82843 7.5 8 7.5V8.5M8 11.5H8.005"
-                  stroke="#153D1C"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              Aide et service client
-            </button>
-          </div>
+          <transition name="fade-slide">
+            <div
+              v-if="showMoreMenu"
+              class="dropdown-menu more-menu"
+              id="more-menu-dropdown"
+              role="menu"
+              @keydown.esc="closeMoreMenu"
+              @keydown.tab="closeMoreMenu"
+              @focusout="onMoreMenuBlur"
+            >
+              <button class="dropdown-item" role="menuitem" ref="moreMenuFirstItem" @click="upgradePlan" tabindex="0">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M8 1L8 15M8 1L12 5M8 1L4 5"
+                    stroke="#153D1C"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                Passer à un forfait supérieur
+              </button>
+              <button class="dropdown-item" role="menuitem" @click="openMembers" tabindex="0">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M5 6C6.10457 6 7 5.10457 7 4C7 2.89543 6.10457 2 5 2C3.89543 2 3 2.89543 3 4C3 5.10457 3.89543 6 5 6Z"
+                    fill="#153D1C"
+                  />
+                  <path
+                    d="M11 6C12.1046 6 13 5.10457 13 4C13 2.89543 12.1046 2 11 2C9.89543 2 9 2.89543 9 4C9 5.10457 9.89543 6 11 6Z"
+                    fill="#153D1C"
+                  />
+                  <path
+                    d="M5 8C2.23858 8 0 10.2386 0 13H10C10 10.2386 7.76142 8 5 8Z"
+                    fill="#153D1C"
+                  />
+                  <path
+                    d="M16 13C16 10.7909 14.2091 9 12 9C11.2808 9 10.6056 9.1892 10 9.52624"
+                    fill="#153D1C"
+                  />
+                </svg>
+                Membres
+              </button>
+              <button class="dropdown-item" role="menuitem" @click="openHelp" tabindex="0">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <circle
+                    cx="8"
+                    cy="8"
+                    r="7"
+                    stroke="#153D1C"
+                    stroke-width="1.5"
+                  />
+                  <path
+                    d="M6.5 6C6.5 5.17157 7.17157 4.5 8 4.5C8.82843 4.5 9.5 5.17157 9.5 6C9.5 6.82843 8.82843 7.5 8 7.5V8.5M8 11.5H8.005"
+                    stroke="#153D1C"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                Aide et service client
+              </button>
+            </div>
+          </transition>
         </div>
       </header>
-
+      <!-- Buy Credits Card Section -->
+      <BuyCreditsCard />
       <!-- Partners Overview Section -->
       <section class="partners-section">
         <h2 class="section-title">Mes partenaires en un coup d'Œil...</h2>
-        <div class="partners-carousel">
-          <div class="partner-card partner-card--overdue">
-            <div class="partner-status-header">
-              <span class="status-text">En retard</span>
-            </div>
-            <div class="partner-content">
-              <div class="partner-avatar">
-                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                  <circle cx="24" cy="24" r="24" fill="url(#pattern_martin)" />
-                  <defs>
-                    <pattern
-                      id="pattern_martin"
-                      patternContentUnits="objectBoundingBox"
-                      width="1"
-                      height="1"
-                    >
-                      <rect width="48" height="48" fill="#E0E0E0" />
-                      <circle cx="24" cy="20" r="8" fill="#888" />
-                      <ellipse cx="24" cy="40" rx="12" ry="8" fill="#888" />
-                    </pattern>
-                  </defs>
-                </svg>
-              </div>
-              <div class="partner-info">
-                <h3 class="partner-name">Martin Obiang</h3>
-                <p class="partner-role">Comptable</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="partner-card partner-card--due-soon">
-            <div class="partner-status-header">
-              <span class="status-text">Échéance dans 12j</span>
-            </div>
-            <div class="partner-content">
-              <div class="partner-avatar">
-                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                  <circle cx="24" cy="24" r="24" fill="url(#pattern_nembot)" />
-                  <defs>
-                    <pattern
-                      id="pattern_nembot"
-                      patternContentUnits="objectBoundingBox"
-                      width="1"
-                      height="1"
-                    >
-                      <rect width="48" height="48" fill="#E0E0E0" />
-                      <circle cx="24" cy="20" r="8" fill="#888" />
-                      <ellipse cx="24" cy="40" rx="12" ry="8" fill="#888" />
-                    </pattern>
-                  </defs>
-                </svg>
-              </div>
-              <div class="partner-info">
-                <h3 class="partner-name">Nembot Fokam</h3>
-                <p class="partner-role">Entrepreneur</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="partner-card partner-card--due-soon">
-            <div class="partner-status-header">
-              <span class="status-text">Échéance dans 20j</span>
-            </div>
-            <div class="partner-content">
-              <div class="partner-avatar">
-                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                  <circle cx="24" cy="24" r="24" fill="url(#pattern_sarah)" />
-                  <defs>
-                    <pattern
-                      id="pattern_sarah"
-                      patternContentUnits="objectBoundingBox"
-                      width="1"
-                      height="1"
-                    >
-                      <rect width="48" height="48" fill="#E0E0E0" />
-                      <circle cx="24" cy="20" r="8" fill="#888" />
-                      <ellipse cx="24" cy="40" rx="12" ry="8" fill="#888" />
-                    </pattern>
-                  </defs>
-                </svg>
-              </div>
-              <div class="partner-info">
-                <h3 class="partner-name">Sarah Mandeng</h3>
-                <p class="partner-role">Sécrétaire</p>
-              </div>
-            </div>
-          </div>
+        <div v-if="partnersLoading" class="section-loader">Chargement des partenaires...</div>
+        <div v-else-if="partnersError" class="section-error">{{ partnersError }}</div>
+        <div v-else-if="!partners.length" class="section-empty">Aucun partenaire à afficher.</div>
+        <div v-else class="partners-carousel">
+          <transition-group name="fade-slide" tag="div" class="partners-carousel">
+            <PartnerCard
+              v-for="(partner, idx) in partners"
+              :key="partner.id || partner.name"
+              v-bind="partner"
+              @click="goToPartnerProfile(partner)"
+            />
+          </transition-group>
         </div>
       </section>
 
       <!-- Group Messages Section -->
       <section class="messages-section">
         <h2 class="section-title">Mes relances groupées</h2>
+        <div v-if="relancesLoading" class="section-loader">Chargement des relances...</div>
+        <div v-else-if="relancesError" class="section-error">{{ relancesError }}</div>
+        <div v-else-if="!relances.length" class="section-empty">Aucune relance à afficher.</div>
         <div class="message-card">
           <div class="message-content">
             <div class="message-bubble">
-              <p class="message-text">
-                Salut {utilisateur}, Vous venez de dépasser les délais de
-                paiement pour votre loyer du {date}. Appelez urgemment afin de
-                conformer au contrat de bail initial. Merci.
-              </p>
+              <div class="edit-message-row-stable">
+                <template v-if="isEditingMessage">
+                  <textarea
+                    id="edit-message-textarea"
+                    v-model="messageText"
+                    class="edit-message-textarea"
+                    rows="4"
+                    :placeholder="'Écrivez votre message…'"
+                    @keydown.enter.exact.prevent="saveEditMessage"
+                    @blur="saveEditMessage"
+                  ></textarea>
+                  <button class="edit-message-btn" @click="saveEditMessage" aria-label="Valider le message">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 10.5L9 14.5L15 7.5" stroke="#31920b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                </template>
+                <template v-else>
+                  <p class="message-text" :class="{'message-placeholder': !messageText}">{{ messageText || 'Écrivez votre message…' }}</p>
+                  <button class="edit-message-btn edit-message-btn-absolute" @click="startEditMessage" aria-label="Éditer le message">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 17.25V14.8787C3 14.3161 3.31607 13.7893 3.82843 13.5L14.5 7.5C15.0124 7.21071 15.6839 7.21071 16.1962 7.5L17.25 8.12132C17.7624 8.41061 18.0784 8.93739 18.0784 9.5V11.8713C18.0784 12.4339 17.7624 12.9607 17.25 13.25L6.57843 19.25C6.06607 19.5393 5.39462 19.5393 4.88226 19.25L3.82843 18.6287C3.31607 18.3394 3 17.8126 3 17.25Z" stroke="#153d1c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                </template>
+              </div>
               <div class="sync-indicator">
                 <span class="sync-text">Synchronisé sur</span>
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -324,81 +268,112 @@
               </div>
             </div>
 
-            <div class="message-schedule">
-              <div class="schedule-item">10 juil. 2025</div>
-              <div class="schedule-item">09:48</div>
+            <div class="message-schedule-calendly">
+              <div class="schedule-item-calendly" tabindex="0" @click="openDatePicker" @keydown.enter.prevent="openDatePicker" aria-label="Choisir la date" ref="dateBtnRef">
+                <span class="schedule-icon-calendly">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="6" width="14" height="11" rx="4" fill="#fff"/><rect x="3" y="6" width="14" height="11" rx="4" stroke="#31920b" stroke-width="1.5"/><rect x="6" y="2" width="2" height="4" rx="1" fill="#31920b"/><rect x="12" y="2" width="2" height="4" rx="1" fill="#31920b"/><rect x="3" y="9" width="14" height="1.5" fill="#1ef524"/></svg>
+                </span>
+                <span class="schedule-text-calendly">{{ formatDate(selectedDate) }}</span>
+                <div v-if="showDatePicker" class="datepicker-popover-vanialog" tabindex="-1" ref="datePickerRef">
+                  <div class="datepicker-header">
+                    <button class="datepicker-nav" @click.stop="prevMonth" aria-label="Mois précédent">‹</button>
+                    <span class="datepicker-title">{{ monthNames[pickerMonth] }} {{ pickerYear }}</span>
+                    <button class="datepicker-nav" @click.stop="nextMonth" aria-label="Mois suivant">›</button>
+                  </div>
+                  <div class="datepicker-grid">
+                    <span v-for="d in ['L','M','M','J','V','S','D']" :key="d" class="datepicker-dayname">{{ d }}</span>
+                    <span v-for="n in firstDay" :key="'empty'+n" class="datepicker-empty"></span>
+                    <button v-for="day in daysInMonth" :key="day" class="datepicker-day"
+                      :class="{selected: isSelected(day), today: isToday(day)}"
+                      @click.stop="selectDate(day)"
+                      :aria-label="'Choisir le ' + day + ' ' + monthNames[pickerMonth] + ' ' + pickerYear"
+                    >{{ day }}</button>
+                  </div>
+                  <button class="datepicker-today-btn" @click.stop="selectDate(today.getDate())">Aujourd'hui</button>
+                </div>
+              </div>
+              <div class="schedule-item-calendly" tabindex="0" @click="openTimePicker" @keydown.enter.prevent="openTimePicker" aria-label="Choisir l'heure" ref="timeBtnRef">
+                <span class="schedule-icon-calendly">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" fill="#fff" stroke="#31920b" stroke-width="1.5"/><path d="M10 6V10L13 12" stroke="#31920b" stroke-width="1.5" stroke-linecap="round"/></svg>
+                </span>
+                <span class="schedule-text-calendly">{{ selectedTime }}</span>
+                <div v-if="showCustomTimePicker" class="timepicker-popover-vanialog" tabindex="-1" ref="timePickerRef">
+                  <div class="timepicker-header">Heure</div>
+                  <div class="timepicker-doublecol">
+                    <div class="timepicker-col timepicker-col-hour">
+                      <div class="timepicker-col-title">Heure</div>
+                      <div class="timepicker-col-list">
+                        <button v-for="h in hours" :key="h" class="timepicker-col-btn"
+                          :class="{selected: pickedHour === h}"
+                          @click.stop="pickHour(h)"
+                          :aria-label="'Choisir ' + h + 'h'"
+                        >{{ h }}</button>
+                      </div>
+                    </div>
+                    <div class="timepicker-col timepicker-col-minute">
+                      <div class="timepicker-col-title">Minute</div>
+                      <div class="timepicker-col-list">
+                        <button v-for="m in minutes" :key="m" class="timepicker-col-btn"
+                          :class="{selected: pickedMinute === m}"
+                          @click.stop="pickMinute(m)"
+                          :aria-label="'Choisir ' + pickedHour + 'h' + m"
+                        >{{ m }}</button>
+                      </div>
+                    </div>
+                  </div>
+                  <button class="timepicker-now-btn" @click.stop="setNow">Maintenant</button>
+                </div>
+              </div>
             </div>
 
             <div class="reminder-controls">
-              <div class="reminder-settings">
+              <div class="reminder-settings-premium">
+                <div class="reminder-title-row-premium">
                 <h3 class="reminder-title">Relances automatiques</h3>
-                <div class="reminder-tags">
-                  <span class="reminder-tag removable">
-                    Martin
-                    <button class="remove-tag-btn" aria-label="Retirer Martin">
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 18 18"
-                        fill="none"
-                      >
-                        <path
-                          d="M13.5 4.5L4.50061 13.4994M13.4994 13.5L4.5 4.50064"
-                          stroke="#FFF9CE"
-                          stroke-width="1.125"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                      </svg>
+                  <span class="recipients-count-badge-premium">{{ recipients.length }}</span>
+                </div>
+                <div class="recipients-chips-row" tabindex="0" aria-label="Liste des destinataires">
+                  <transition-group name="fade-slide" tag="div" class="chips-scrollable">
+                    <span v-for="(recipient, idx) in recipients.slice(0, 4)" :key="recipient.name" class="recipient-chip">
+                      <img :src="recipient.avatar" :alt="recipient.name" class="recipient-chip-avatar" />
+                      <span class="recipient-chip-name">{{ recipient.name }}</span>
+                      <button class="recipient-chip-remove" aria-label="Retirer {{recipient.name}}" @click="removeRecipient(idx)">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4l8 8" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
                     </button>
                   </span>
-                  <button class="reminder-tag add-tag">
-                    Ajouter
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <path
-                        d="M2.25 15V13.4778C2.25 12.5461 2.66945 11.6324 3.51726 11.246C4.55138 10.7746 5.79159 10.5 7.125 10.5C8.0586 10.5 8.94652 10.6346 9.75 10.8771"
-                        stroke="white"
-                        stroke-width="1.125"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                      <path
-                        d="M7.125 8.25C8.57475 8.25 9.75 7.07475 9.75 5.625C9.75 4.17525 8.57475 3 7.125 3C5.67525 3 4.5 4.17525 4.5 5.625C4.5 7.07475 5.67525 8.25 7.125 8.25Z"
-                        stroke="white"
-                        stroke-width="1.125"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                      <path
-                        d="M10.875 3.1084C11.9593 3.43111 12.75 4.43556 12.75 5.62469C12.75 6.81383 11.9593 7.8183 10.875 8.14103"
-                        stroke="white"
-                        stroke-width="1.125"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                      <path
-                        d="M13.5 10.5V15M11.25 12.75H15.75"
-                        stroke="white"
-                        stroke-width="1.125"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
+                  </transition-group>
+                  <span v-if="recipients.length > 4" class="recipients-badge-premium">+{{ recipients.length - 4 }}</span>
+                  <button class="recipient-chip-add" @click="openPartnerModal" aria-label="Ajouter un destinataire">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="10" fill="#31920B"/><path d="M10 6V14M6 10H14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
                   </button>
                 </div>
               </div>
-              <div class="toggle-switch">
-                <input type="checkbox" id="auto-reminders" checked />
-                <label for="auto-reminders" class="toggle-slider">
-                  <span class="toggle-handle"></span>
-                </label>
-              </div>
             </div>
 
-            <button class="schedule-btn">
+            <button class="schedule-btn" @click="scheduleMessage">
               Programmer le message
-              <span class="coin-emoji">🪙</span>
+              <span class="credit-btn-group">
+                <span class="credit-count-btn">{{ recipients.length }}</span>
+                <span class="credit-icon-btn">
+                  <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-label="Icône de crédits">
+                    <defs>
+                      <linearGradient id="creditGradientBtn" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#31920b;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#153d1c;stop-opacity:1" />
+                      </linearGradient>
+                    </defs>
+                    <circle cx="8" cy="8" r="7" fill="url(#creditGradientBtn)" stroke="#31920b" stroke-width="0.5"/>
+                    <path d="M8 3L8 13M5 6L8 3L11 6" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="8" cy="10" r="1.5" fill="white" opacity="0.8"/>
+                  </svg>
+                </span>
+              </span>
             </button>
+            <transition name="fade-slide">
+              <div v-if="showToast" class="toast-success">
+                ✅ Message programmé avec succès !
+              </div>
+            </transition>
           </div>
         </div>
       </section>
@@ -406,8 +381,11 @@
       <!-- Recent Actions Section -->
       <section class="actions-section">
         <h2 class="section-title">Actions récentes</h2>
-        <div class="actions-card">
-          <div class="action-item">
+        <div v-if="actionsLoading" class="section-loader">Chargement des actions...</div>
+        <div v-else-if="actionsError" class="section-error">{{ actionsError }}</div>
+        <div v-else-if="!actions.length" class="section-empty">Aucune action récente.</div>
+        <div v-else class="actions-card">
+          <div class="action-item" v-for="action in actions" :key="action.id">
             <div class="action-info">
               <svg
                 class="action-icon"
@@ -440,9 +418,9 @@
                   stroke-linejoin="round"
                 />
               </svg>
-              <span class="action-text">Relance envoyée à Salma</span>
+              <span class="action-text">{{ action.text }}</span>
             </div>
-            <span class="action-time">1h</span>
+            <span class="action-time">{{ action.time }}</span>
           </div>
 
           <div class="action-divider"></div>
@@ -541,84 +519,308 @@
 
           <div class="action-divider"></div>
 
-          <button class="show-more-btn">
-            <svg width="24" height="25" viewBox="0 0 24 25" fill="none">
-              <path
-                d="M11.9961 12.5469H12.0051"
-                stroke="#153D1C"
-                stroke-opacity="0.64"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M18 12.5469H18.009"
-                stroke="#153D1C"
-                stroke-opacity="0.64"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M6 12.5469H6.00898"
-                stroke="#153D1C"
-                stroke-opacity="0.64"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            Afficher plus
-          </button>
+          <button v-if="actionsHasMore && !actionsLoading" class="show-more-btn" @click="showMoreActions" aria-label="Afficher plus d'actions">Afficher plus</button>
         </div>
       </section>
-    </div>
 
-    <!-- Floating Action Button -->
-    <div class="fab-container">
-      <button class="floating-action-btn" aria-label="Ajouter un partenaire">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M14 8.5C14 5.73858 11.7614 3.5 9 3.5C6.23858 3.5 4 5.73858 4 8.5C4 11.2614 6.23858 13.5 9 13.5C11.7614 13.5 14 11.2614 14 8.5Z"
-            fill="#141B34"
-            stroke="#141B34"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <path
-            d="M16 20.5C16 16.634 12.866 13.5 9 13.5C5.13401 13.5 2 16.634 2 20.5H16Z"
-            fill="#141B34"
-            stroke="#141B34"
-            stroke-width="1.5"
-            stroke-linejoin="round"
-          />
-          <path
-            d="M19 9V15M22 12H16"
-            stroke="#141B34"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-      </button>
+      <!-- Statistics Section -->
+      <section class="stats-section">
+        <h2 class="section-title">Statistiques</h2>
+        <div v-if="statsLoading" class="section-loader">Chargement des statistiques...</div>
+        <div v-else-if="statsError" class="section-error">{{ statsError }}</div>
+        <div v-else-if="!stats" class="section-empty">Aucune statistique à afficher.</div>
+        <div v-else class="stats-content">
+          <!-- Affichage des stats dynamiques, ex : -->
+          <div>Nombre de relances : {{ stats.nbRelances }}</div>
+          <div>Montant total : {{ stats.montantTotal }}</div>
+          <!-- ... -->
+        </div>
+      </section>
+
+      <!-- Floating Action Button -->
+      <div class="fab-container">
+        <button class="floating-action-btn" @click="goToAddPartner">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <path
+              d="M18 7V29M7 18H29"
+              stroke="#141B34"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+      </div>
+      <PopupSuccess :visible="showSuccessPopup" :message="successMessage" @close="showSuccessPopup = false" />
+      <PopupError :visible="showErrorPopup" :message="errorMessage" @close="showErrorPopup = false" />
     </div>
   </div>
+
+  <!-- MODAL PARTENAIRES : placer tout en bas du template -->
+  <transition name="fade-slide">
+    <div v-if="showPartnerModal" class="partner-modal-overlay premium" @click.self="closePartnerModal" tabindex="-1" aria-modal="true" role="dialog">
+      <div class="partner-modal premium">
+        <div class="partner-modal-header premium">
+          <h2 class="partner-modal-title premium">Ajouter un partenaire à la relance</h2>
+          <button class="partner-modal-close premium" @click="closePartnerModal" aria-label="Fermer">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M15 5L5 15M5 5l10 10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <input class="partner-modal-search premium" v-model="searchPartner" placeholder="Rechercher un partenaire…" aria-label="Rechercher un partenaire" />
+        <div class="partner-modal-list premium">
+          <div v-for="partner in filteredPartners" :key="partner.name" class="partner-modal-item premium" @click="togglePartnerSelection(partner.name)" :aria-checked="selectedPartners.includes(partner.name)" role="checkbox" tabindex="0">
+            <img :src="partner.avatar" :alt="partner.name" class="partner-modal-avatar premium" />
+            <div class="partner-modal-info premium">
+              <span class="partner-modal-name premium">{{ partner.name }}</span>
+              <span class="partner-modal-role premium">{{ partner.role }}</span>
+            </div>
+            <span class="partner-modal-checkbox premium" :class="{selected: selectedPartners.includes(partner.name)}">
+              <svg v-if="selectedPartners.includes(partner.name)" width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="9" fill="#39FF14"/><path d="M5 9.5L8 12.5L13 7.5" stroke="#181818" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </span>
+          </div>
+        </div>
+        <button class="partner-modal-validate premium" @click="validatePartnerSelection">✔️ Ajouter à la relance</button>
+      </div>
+      <div class="partner-modal-glow">
+        <span class="partner-modal-glow-icon">⚡</span> Sélectionnez vos partenaires
+      </div>
+    </div>
+  </transition>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useUserStore } from "../stores/user.js";
+import { getFlagPath } from "../utils/countryUtils.js";
+import PartnerCard from '../components/molecules/PartnerCard.vue';
+import BuyCreditsCard from '../components/molecules/BuyCreditsCard.vue';
+import DashboardMenu from '../components/molecules/DashboardMenu.vue';
+import { useRouter } from 'vue-router';
+import PopupSuccess from '../components/molecules/PopupSuccess.vue';
+import PopupError from '../components/molecules/PopupError.vue';
+import PartnerService from '../services/partnerService.js';
+import RelanceService from '../services/relanceService.js';
+import ActionsService from '../services/actionsService.js';
+import StatsService from '../services/statsService.js';
+
+// Store
+const userStore = useUserStore();
+const router = useRouter();
 
 // State
-const autoReminders = ref(true);
 const showUserMenu = ref(false);
 const showMoreMenu = ref(false);
+const userMenuFirstItem = ref(null);
+const moreMenuFirstItem = ref(null);
+const isDarkMode = ref(false);
+const showToast = ref(false);
+const isEditingMessage = ref(false);
+const messageText = ref("Salut utilisateur, Vous venez de dépasser les délais de paiement pour votre loyer du date. Appelez urgemment afin de conformer au contrat de bail initial. Merci.");
+const showPartnerModal = ref(false);
+const partners = ref([]);
+const partnersLoading = ref(false);
+const partnersError = ref("");
+const searchPartner = ref('');
+const selectedPartners = ref([]);
+const selectedDate = ref('2025-07-10');
+const selectedTime = ref('09:48');
+const showDatePicker = ref(false);
+const showTimePicker = ref(false);
+const today = new Date();
+const dateObj = computed(() => new Date(selectedDate.value));
+const pickerMonth = ref(dateObj.value.getMonth());
+const pickerYear = ref(dateObj.value.getFullYear());
+const daysInMonth = computed(() => new Date(pickerYear.value, pickerMonth.value + 1, 0).getDate());
+const firstDay = computed(() => new Date(pickerYear.value, pickerMonth.value, 1).getDay());
+const monthNames = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+const showCustomTimePicker = ref(false);
+const hours = Array.from({length: 24}, (_, i) => i.toString().padStart(2, '0'));
+const minutes = Array.from({length: 12}, (_, i) => (i*5).toString().padStart(2, '0'));
+const pickedHour = ref(selectedTime.value.split(':')[0]);
+const pickedMinute = ref(selectedTime.value.split(':')[1]);
+const datePickerRef = ref(null);
+const timePickerRef = ref(null);
+const dateBtnRef = ref(null);
+const timeBtnRef = ref(null);
+
+// Menu state
+const showDashboardMenu = ref(false);
+const showSuccessPopup = ref(false);
+const showErrorPopup = ref(false);
+const successMessage = ref('Message programmé avec succès !');
+const errorMessage = ref('Crédits insuffisants pour programmer la relance.');
+
+const relances = ref([]);
+const relancesLoading = ref(false);
+const relancesError = ref("");
+
+const actions = ref([]);
+const actionsLoading = ref(false);
+const actionsError = ref("");
+const actionsPage = ref(1);
+const actionsHasMore = ref(true);
+
+const stats = ref(null);
+const statsLoading = ref(false);
+const statsError = ref("");
+
+function handleMenuSelect(action) {
+  showDashboardMenu.value = false;
+  console.log(`[FRONTEND] [${new Date().toISOString()}] Navigation vers page: ${action}`);
+  switch(action) {
+    case 'editProfile':
+      router.push('/user-info-modify');
+      break;
+    case 'archives':
+      router.push('/archives');
+      break;
+    case 'upgrade':
+      router.push('/credits');
+      break;
+    case 'members':
+      router.push('/userinfopage');
+      break;
+    case 'help':
+      router.push('/faq');
+      break;
+    case 'logout':
+      logout();
+      break;
+  }
+}
+
+function handleClickOutside(e) {
+  // Ne pas fermer si on clique sur le bouton qui ouvre le picker
+  if (dateBtnRef.value && dateBtnRef.value.contains(e.target)) return;
+  if (timeBtnRef.value && timeBtnRef.value.contains(e.target)) return;
+  if (showDatePicker.value && datePickerRef.value && !datePickerRef.value.contains(e.target)) {
+    showDatePicker.value = false;
+  }
+  if (showCustomTimePicker.value && timePickerRef.value && !timePickerRef.value.contains(e.target)) {
+    showCustomTimePicker.value = false;
+  }
+}
+function handleEscape(e) {
+  if (e.key === 'Escape') {
+    if (showDatePicker.value) showDatePicker.value = false;
+    if (showCustomTimePicker.value) showCustomTimePicker.value = false;
+  }
+}
+onMounted(() => {
+  console.log(`[FRONTEND] [${new Date().toISOString()}] Chargement profil utilisateur...`);
+  document.addEventListener('mousedown', handleClickOutside);
+  document.addEventListener('keydown', handleEscape);
+});
+onUnmounted(() => {
+  document.removeEventListener('mousedown', handleClickOutside);
+  document.removeEventListener('keydown', handleEscape);
+});
+
+// Initialisation des données utilisateur
+onMounted(async () => {
+  // Si pas de données utilisateur dans le store, essayer de les récupérer
+  if (!userStore.utilisateur) {
+    const phone = localStorage.getItem('otpPhone') || '';
+    if (phone) {
+      console.log('🔄 Chargement des données utilisateur pour le dashboard...');
+      await userStore.verifierUtilisateur(phone);
+    }
+  }
+  // Charger dynamiquement les partenaires
+  partnersLoading.value = true;
+  partnersError.value = "";
+  try {
+    const data = await PartnerService.getPartners();
+    partners.value = Array.isArray(data) ? data : (data.partners || []);
+  } catch (err) {
+    partnersError.value = err.message || 'Erreur lors du chargement des partenaires';
+  } finally {
+    partnersLoading.value = false;
+  }
+  // Charger dynamiquement les relances
+  relancesLoading.value = true;
+  relancesError.value = "";
+  try {
+    const data = await RelanceService.getRelances();
+    relances.value = Array.isArray(data) ? data : (data.relances || []);
+  } catch (err) {
+    relancesError.value = err.message || 'Erreur lors du chargement des relances';
+  } finally {
+    relancesLoading.value = false;
+  }
+  // Charger dynamiquement les actions
+  await loadActions(1);
+  // Charger dynamiquement les statistiques
+  await loadStats();
+});
+
+// Computed properties from store
+const userData = computed(() => {
+  const data = userStore.utilisateur;
+  console.log('📋 Données utilisateur complètes:', data);
+  return data;
+});
+const userName = computed(() => userData.value?.nom || "Utilisateur");
+const userPhoto = computed(() => {
+  const photoProfil = userData.value?.photoProfil;
+  console.log('📸 Photo de profil:', photoProfil);
+  
+  if (!photoProfil) {
+    // Image par défaut moderne et engageante
+    return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23153d1c;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%2331920b;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23grad1)'/%3E%3Ccircle cx='50' cy='35' r='15' fill='white' opacity='0.9'/%3E%3Cpath d='M25 75 Q50 55 75 75' fill='white' opacity='0.9'/%3E%3C/svg%3E";
+  }
+  
+  // Si c'est déjà une URL complète, l'utiliser
+  if (photoProfil.startsWith('http')) {
+    return photoProfil;
+  }
+  
+  // Sinon, construire l'URL avec le nouveau système
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const photoUrl = `${baseUrl}/static/profile-photos/${photoProfil}`;
+  console.log('🔗 URL construite:', photoUrl);
+  return photoUrl;
+});
+const userCredits = computed(() => userData.value?.credits || 3);
+
+// Computed properties for full name and country flag
+const userFullName = computed(() => {
+  const nom = userData.value?.nom || "";
+  const prenom = userData.value?.prenom || "";
+  console.log('👤 Nom:', nom, 'Prénom:', prenom);
+  
+  if (nom && prenom) {
+    const fullName = `${nom} ${prenom}`;
+    console.log('✅ Nom complet:', fullName);
+    return fullName;
+  } else if (nom) {
+    console.log('✅ Nom seulement:', nom);
+    return nom;
+  } else if (prenom) {
+    console.log('✅ Prénom seulement:', prenom);
+    return prenom;
+  }
+  console.log('⚠️ Aucun nom trouvé, utilisation de "Utilisateur"');
+  return "Utilisateur";
+});
+
+const userCountry = computed(() => {
+  const country = userData.value?.country || "";
+  console.log('🌍 Pays de l\'utilisateur:', country);
+  return country;
+});
+
+const userCountryFlag = computed(() => {
+  const flagPath = getFlagPath(userCountry.value);
+  console.log('🏁 Chemin du drapeau:', flagPath);
+  return flagPath;
+});
+
+// Dynamic data for message template
+const utilisateur = ref("utilisateur");
+const date = ref("date");
 
 // Methods
-const toggleAutoReminders = () => {
-  autoReminders.value = !autoReminders.value;
-};
-
 const toggleUserMenu = () => {
   showUserMenu.value = !showUserMenu.value;
   if (showMoreMenu.value) showMoreMenu.value = false;
@@ -645,17 +847,17 @@ const logout = () => {
 };
 
 const upgradePlan = () => {
-  console.log("Passer à un forfait supérieur");
+  router.push('/buy-credits');
   showMoreMenu.value = false;
 };
 
 const openMembers = () => {
-  console.log("Ouvrir membres");
+  router.push('/userinfopage');
   showMoreMenu.value = false;
 };
 
 const openHelp = () => {
-  console.log("Aide et service client");
+  router.push('/faq');
   showMoreMenu.value = false;
 };
 
@@ -663,31 +865,285 @@ const removePartner = () => {
   // Logic to remove partner from reminders
 };
 
-const addPartner = () => {
-  // Logic to add partner to reminders
+const addRecipient = () => {
+  recipients.value.push({ name: 'Nouveau', avatar: 'https://ui-avatars.com/api/?name=Nouveau&background=31920B&color=fff' });
 };
 
-const scheduleMessage = () => {
-  // Logic to schedule message
+const removeRecipient = (idx) => {
+  recipients.value.splice(idx, 1);
 };
+
+async function scheduleMessage() {
+  if (userCredits.value >= recipients.value.length) {
+    try {
+      // Construire les données de relance à envoyer
+      const relanceData = {
+        destinataires: recipients.value.map(r => r.id || r.name),
+        message: messageText.value,
+        date: selectedDate.value,
+        heure: selectedTime.value
+      };
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Action: Programmation relance, Payload:`, relanceData);
+      const result = await RelanceService.createRelance(relanceData);
+      if (result && result.success) {
+        showSuccessPopup.value = true;
+        // Rafraîchir la liste des relances
+        try {
+          const data = await RelanceService.getRelances();
+          relances.value = Array.isArray(data) ? data : (data.relances || []);
+        } catch {}
+        // Rafraîchir le solde utilisateur
+        await userStore.forcerRecuperationUtilisateur(userStore.telephone);
+      } else {
+        showErrorPopup.value = true;
+        errorMessage.value = result.message || 'Erreur lors de la programmation de la relance';
+      }
+    } catch (err) {
+      showErrorPopup.value = true;
+      errorMessage.value = err.message || 'Erreur lors de la programmation de la relance';
+    }
+  } else {
+    showErrorPopup.value = true;
+    errorMessage.value = 'Crédits insuffisants pour programmer la relance.';
+  }
+  showToast.value = false;
+}
 
 const showMoreActions = () => {
-  // Logic to show more actions
+  if (actionsHasMore.value && !actionsLoading.value) {
+    loadActions(actionsPage.value + 1);
+  }
 };
+
+const closeUserMenu = () => {
+  showUserMenu.value = false;
+};
+const closeMoreMenu = () => {
+  showMoreMenu.value = false;
+};
+const onUserMenuBlur = (e) => {
+  // Ferme le menu si focus sort du menu
+  if (!e.relatedTarget || !e.currentTarget.contains(e.relatedTarget)) {
+    closeUserMenu();
+  }
+};
+const onMoreMenuBlur = (e) => {
+  if (!e.relatedTarget || !e.currentTarget.contains(e.relatedTarget)) {
+    closeMoreMenu();
+  }
+};
+const focusFirstUserMenuItem = async () => {
+  await nextTick();
+  userMenuFirstItem.value?.focus();
+};
+const focusFirstMoreMenuItem = async () => {
+  await nextTick();
+  moreMenuFirstItem.value?.focus();
+};
+
+const toggleDarkMode = () => {
+  isDarkMode.value = !isDarkMode.value;
+  if (isDarkMode.value) {
+    document.body.classList.add('dark');
+  } else {
+    document.body.classList.remove('dark');
+  }
+};
+
+const goToAddPartner = () => {
+  router.push('/add-partner');
+};
+
+const startEditMessage = () => {
+  isEditingMessage.value = true;
+  nextTick(() => {
+    document.getElementById('edit-message-textarea')?.focus();
+  });
+};
+const saveEditMessage = () => {
+  isEditingMessage.value = false;
+};
+
+// PARTENAIRES PAR DÉFAUT POUR LE DASHBOARD
+const partnerCards = [
+  {
+    id: 1,
+    name: "Martin Obiang",
+    role: "Comptable",
+    status: "overdue",
+    statusText: "En Retard"
+  },
+  {
+    id: 2,
+    name: "Nembot Fokam",
+    role: "Entrepreneur",
+    status: "due-soon",
+    statusText: "Échéance Dans 12j"
+  },
+  {
+    id: "3",
+    name: "Sarah",
+    role: "Séc",
+    status: "due-soon",
+    statusText: "Échéance"
+  }
+];
+
+const recipients = ref([
+  { name: 'Martin', avatar: 'https://ui-avatars.com/api/?name=Martin&background=31920B&color=fff' },
+  { name: 'Sarah', avatar: 'https://ui-avatars.com/api/?name=Sarah&background=31920B&color=fff' }
+]);
+const maxAvatars = 3;
+
+const openPartnerModal = () => {
+  console.log(`[FRONTEND] [${new Date().toISOString()}] Modal affiché: Ajout partenaire.`);
+  selectedPartners.value = recipients.value.map(r => r.name);
+  showPartnerModal.value = true;
+};
+const closePartnerModal = () => {
+  showPartnerModal.value = false;
+};
+const togglePartnerSelection = (name) => {
+  if (selectedPartners.value.includes(name)) {
+    selectedPartners.value = selectedPartners.value.filter(n => n !== name);
+  } else {
+    selectedPartners.value.push(name);
+  }
+};
+const validatePartnerSelection = () => {
+  recipients.value = partners.value.filter(p => selectedPartners.value.includes(p.name));
+  showPartnerModal.value = false;
+};
+const filteredPartners = computed(() => {
+  if (!searchPartner.value) return partners.value;
+  return partners.value.filter(p =>
+    p.name.toLowerCase().includes(searchPartner.value.toLowerCase()) ||
+    p.role.toLowerCase().includes(searchPartner.value.toLowerCase())
+  );
+});
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('-');
+  return `${d.padStart(2, '0')} ${['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'][parseInt(m, 10)-1]} ${y}`;
+}
+
+function openDatePicker() {
+  showDatePicker.value = true;
+  pickerMonth.value = dateObj.value.getMonth();
+  pickerYear.value = dateObj.value.getFullYear();
+}
+
+function selectDate(day) {
+  const m = (pickerMonth.value + 1).toString().padStart(2, '0');
+  const d = day.toString().padStart(2, '0');
+  selectedDate.value = `${pickerYear.value}-${m}-${d}`;
+  showDatePicker.value = false;
+}
+
+function prevMonth() {
+  if (pickerMonth.value === 0) {
+    pickerMonth.value = 11;
+    pickerYear.value--;
+  } else {
+    pickerMonth.value--;
+  }
+}
+
+function nextMonth() {
+  if (pickerMonth.value === 11) {
+    pickerMonth.value = 0;
+    pickerYear.value++;
+  } else {
+    pickerMonth.value++;
+  }
+}
+
+function isToday(day) {
+  return (
+    today.getDate() === day &&
+    today.getMonth() === pickerMonth.value &&
+    today.getFullYear() === pickerYear.value
+  );
+}
+
+function isSelected(day) {
+  const d = parseInt(selectedDate.value.split('-')[2], 10);
+  const m = parseInt(selectedDate.value.split('-')[1], 10) - 1;
+  const y = parseInt(selectedDate.value.split('-')[0], 10);
+  return d === day && m === pickerMonth.value && y === pickerYear.value;
+}
+
+function openTimePicker() {
+  showCustomTimePicker.value = true;
+  pickedHour.value = selectedTime.value.split(':')[0];
+  pickedMinute.value = selectedTime.value.split(':')[1];
+}
+
+function pickHour(h) {
+  pickedHour.value = h;
+}
+
+function pickMinute(m) {
+  pickedMinute.value = m;
+  selectedTime.value = `${pickedHour.value}:${pickedMinute.value}`;
+  showCustomTimePicker.value = false;
+}
+
+function setNow() {
+  const now = new Date();
+  pickedHour.value = now.getHours().toString().padStart(2, '0');
+  pickedMinute.value = now.getMinutes().toString().padStart(2, '0');
+  selectedTime.value = `${pickedHour.value}:${pickedMinute.value}`;
+  showCustomTimePicker.value = false;
+}
+
+function goToPartnerProfile(partner) {
+  router.push(`/partner/${partner.id}`);
+}
+
+async function loadActions(page = 1) {
+  actionsLoading.value = true;
+  actionsError.value = "";
+  try {
+    const data = await ActionsService.getActions({ page, limit: 10 });
+    const newActions = Array.isArray(data) ? data : (data.actions || []);
+    if (page === 1) {
+      actions.value = newActions;
+    } else {
+      actions.value = [...actions.value, ...newActions];
+    }
+    actionsHasMore.value = newActions.length === 10; // Suppose 10 par page
+    actionsPage.value = page;
+  } catch (err) {
+    actionsError.value = err.message || 'Erreur lors du chargement des actions récentes';
+  } finally {
+    actionsLoading.value = false;
+  }
+}
+
+async function loadStats() {
+  statsLoading.value = true;
+  statsError.value = "";
+  try {
+    const data = await StatsService.getOverview();
+    stats.value = data;
+  } catch (err) {
+    statsError.value = err.message || 'Erreur lors du chargement des statistiques';
+  } finally {
+    statsLoading.value = false;
+  }
+}
 </script>
 
 <style scoped>
-/* Base styles */
+@import '../assets/tokens.css';
+
 .dashboard-wrapper {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: var(--light-gray);
   padding: 35px 32px;
-  font-family:
-    "Figtree",
-    -apple-system,
-    Roboto,
-    Helvetica,
-    sans-serif;
+  font-family: var(--font-main);
 }
 
 .dashboard-container {
@@ -722,7 +1178,7 @@ const showMoreActions = () => {
 .avatar-image {
   width: 46px;
   height: 46px;
-  border-radius: 8px;
+  border-radius: var(--border-radius-lg);
   object-fit: cover;
 }
 
@@ -743,6 +1199,7 @@ const showMoreActions = () => {
   display: flex;
   align-items: center;
   gap: 8px;
+  height: 22px;
 }
 
 .dropdown-container {
@@ -753,9 +1210,9 @@ const showMoreActions = () => {
   position: absolute;
   top: 100%;
   right: 0;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(21, 61, 28, 0.15);
+  background: var(--white);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-card);
   border: 1px solid rgba(21, 61, 28, 0.1);
   padding: 8px 0;
   min-width: 200px;
@@ -764,8 +1221,7 @@ const showMoreActions = () => {
 }
 
 .user-menu {
-  left: 0;
-  right: auto;
+ 
 }
 
 .more-menu {
@@ -775,88 +1231,19 @@ const showMoreActions = () => {
 
 .more-menu-container {
   position: relative;
-}
-
-.dropdown-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 12px 16px;
-  background: none;
-  border: none;
-  font-family:
-    "Figtree",
-    -apple-system,
-    Roboto,
-    Helvetica,
-    sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: #153d1c;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  text-align: left;
-}
-
-.dropdown-item:hover {
-  background: rgba(21, 61, 28, 0.05);
-}
-
-.dropdown-item svg {
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-}
-
-.user-name {
-  color: #153d1c;
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.6;
-  letter-spacing: -0.2px;
-  margin: 0;
-}
-
-.dropdown-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.credits-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.flag-icon {
-  width: 12px;
-  height: 12px;
-}
-
-.separator-dot {
-  width: 2px;
-  height: 2px;
-  background: #153d1c;
-  border-radius: 50%;
 }
 
 .credits-display {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 5px;
 }
 
 .credits-text {
-  color: #31920b;
-  font-size: 20px;
+  color: var(--secondary-green);
+  font-size: var(--font-size-lg);
   font-weight: 700;
   line-height: 1.6;
   letter-spacing: -0.2px;
@@ -864,15 +1251,19 @@ const showMoreActions = () => {
 
 @media (max-width: 640px) {
   .credits-text {
-    font-size: 16px;
+    font-size: var(--font-size-md);
   }
 }
 
-.credits-emoji {
-  color: #31920b;
-  font-size: 14px;
-  font-weight: 700;
-  opacity: 0.7;
+.credits-icon {
+  width: 20px;
+  height: 20px;
+  filter: drop-shadow(0 1px 2px rgba(49, 146, 11, 0.2));
+  transition: transform 0.2s ease;
+}
+
+.credits-icon:hover {
+  transform: scale(1.1);
 }
 
 .more-options-btn {
@@ -889,24 +1280,24 @@ const showMoreActions = () => {
 
 /* Section Titles */
 .section-title {
-  color: rgba(21, 61, 28, 0.64);
+  color: var(--dark-green);
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.6;
   letter-spacing: -0.18px;
-  margin: 0;
+  margin: 0 0 8px 0;
 }
 
 /* Partners Section */
 .partners-section {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
 .partners-carousel {
   display: flex;
-  gap: 14px;
+  gap: 16px;
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -917,10 +1308,10 @@ const showMoreActions = () => {
 }
 
 .partner-card {
-  min-width: 157px;
-  height: 185px;
+  min-width: 140px;
+  height: 160px;
   background: #fff;
-  border-radius: 18px;
+  border-radius: 16px;
   overflow: hidden;
   position: relative;
   flex-shrink: 0;
@@ -932,13 +1323,13 @@ const showMoreActions = () => {
 }
 
 .partner-card--overdue .partner-status-header {
-  background: #eb002d;
-  height: 84px;
-  border-radius: 18px 18px 0 0;
+  background: #ef1524;
+  height: 60px;
+  border-radius: 16px 16px 0 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 21px;
+  padding: 0 16px;
 }
 
 .partner-card--due-soon {
@@ -947,23 +1338,23 @@ const showMoreActions = () => {
 }
 
 .partner-card--due-soon .partner-status-header {
-  background: #f59100;
-  height: 84px;
-  border-radius: 18px 18px 0 0;
+  background: #fb9700;
+  height: 60px;
+  border-radius: 16px 16px 0 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 21px;
+  padding: 0 16px;
 }
 
 .partner-card--paid .partner-status-header {
   background: #31920b;
-  height: 84px;
-  border-radius: 18px 18px 0 0;
+  height: 60px;
+  border-radius: 16px 16px 0 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 21px;
+  padding: 0 16px;
 }
 
 .partner-status-header {
@@ -973,10 +1364,9 @@ const showMoreActions = () => {
 .status-text {
   color: #fff;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.6;
   letter-spacing: -0.14px;
-  text-transform: capitalize;
   text-align: center;
 }
 
@@ -984,8 +1374,9 @@ const showMoreActions = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 17px;
-  padding: 27px 21px 21px;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
   flex: 1;
 }
 
@@ -1019,19 +1410,19 @@ const showMoreActions = () => {
 
 .partner-name {
   color: #153d1c;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 600;
   line-height: 1.6;
-  letter-spacing: -0.18px;
+  letter-spacing: -0.16px;
   margin: 0;
 }
 
 .partner-role {
-  color: #153d1c;
-  font-size: 16px;
+  color: #6b7280;
+  font-size: 14px;
   font-weight: 400;
   line-height: 1.6;
-  letter-spacing: -0.16px;
+  letter-spacing: -0.14px;
   margin: 0;
 }
 
@@ -1039,176 +1430,286 @@ const showMoreActions = () => {
 .messages-section {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
 .message-card {
-  padding: 18px 38px;
-  background: #fff;
+  padding: 16px;
+  background: var(--white);
   border-radius: 18px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
 .message-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
 .message-bubble {
-  background: #f8f6f4;
+  background: var(--white);
   border-radius: 18px;
-  padding: 18px;
+  padding: 20px 16px 20px 16px;
   position: relative;
-  min-height: 142px;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  box-shadow: 0 2px 12px rgba(21,61,28,0.07);
+}
+
+.edit-message-row-stable {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 48px;
+  position: relative;
+}
+.edit-message-textarea {
+  width: 100%;
+  min-height: 80px;
+  border-radius: 12px;
+  border: 1.5px solid var(--secondary-green);
+  font-size: 18px;
+  font-family: var(--font-main);
+  color: var(--primary-green);
+  padding: 12px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.edit-message-textarea:focus {
+  border-color: var(--accent-green);
+}
+.edit-message-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  background: var(--light-gray);
+  box-shadow: 0 1px 4px rgba(21,61,28,0.07);
+}
+.edit-message-btn:focus {
+  outline: 2px solid var(--secondary-green);
 }
 
 .message-text {
-  color: rgba(21, 61, 28, 0.64);
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 1.24;
-  letter-spacing: -0.16px;
-  margin: 0 0 40px 0;
+  width: 100%;
+  min-height: 48px;
+  font-size: 18px;
+  font-family: var(--font-main);
+  color: var(--primary-green);
+  margin: 0;
+  padding-right: 40px;
+  word-break: break-word;
+  display: flex;
+  align-items: center;
+}
+.message-placeholder {
+  color: var(--gray-700);
+  font-style: italic;
 }
 
 .sync-indicator {
   position: absolute;
-  bottom: 11px;
-  right: 17px;
+  bottom: 8px;
+  right: 12px;
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
 .sync-text {
-  color: rgba(21, 61, 28, 0.64);
-  font-size: 10px;
-  font-style: italic;
-  font-weight: 500;
-  line-height: 1.24;
-  letter-spacing: -0.1px;
-}
-
-.message-schedule {
-  display: flex;
-  gap: 8px;
-}
-
-.schedule-item {
-  flex: 1;
-  padding: 16px;
-  background: #fff9ce;
-  border-radius: 8px;
-  color: #153d1c;
-  font-size: 16px;
+  color: var(--primary-green);
+  font-size: 12px;
   font-weight: 400;
-  line-height: 1.6;
-  letter-spacing: -0.16px;
-  text-align: center;
+  line-height: 1.2;
+  letter-spacing: -0.12px;
+}
+
+.message-schedule-calendly {
+  display: flex;
+  gap: 16px;
+  margin: 18px 0 10px 0;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+.schedule-item-calendly {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(21,61,28,0.06);
+  padding: 14px 22px 14px 16px;
+  min-width: 140px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #153d1c;
+  transition: box-shadow 0.18s, border 0.18s, background 0.18s;
+  border: 2px solid #31920b;
+  cursor: pointer;
+  position: relative;
+}
+.schedule-item-calendly:focus, .schedule-item-calendly:hover {
+  box-shadow: 0 4px 16px rgba(49,146,11,0.12);
+  border: 2.5px solid #1ef524;
+  outline: none;
+  background: #f5f5f5;
+}
+.schedule-icon-calendly {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 4px;
+}
+.schedule-text-calendly {
+  flex: 1;
+  text-align: left;
+  font-size: 16px;
+  font-weight: 600;
+  color: #153d1c;
+}
+.datepicker-vanialog-visible, .timepicker-vanialog-visible {
+  position: absolute;
+  left: 0; top: 0; width: 100%; height: 100%;
+  z-index: 10;
+  border-radius: 18px;
+  border: 2px solid #31920b;
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(49,146,11,0.10);
+  font-size: 16px;
+  color: #153d1c;
+  padding: 0 12px;
+  outline: none;
+  display: block;
+}
+.datepicker-vanialog-visible:focus, .timepicker-vanialog-visible:focus {
+  border: 2.5px solid #1ef524;
+}
+@media (max-width: 600px) {
+  .message-schedule-calendly {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .schedule-item-calendly {
+    min-width: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 
 .reminder-controls {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  padding: 16px;
+  padding: 0;
 }
 
-.reminder-settings {
+.reminder-settings-premium {
+  margin: 24px 0 16px 0;
+  padding: 0 0 8px 0;
+  background: none;
+}
+.reminder-title-row-premium {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
-
-.reminder-title {
-  color: #153d1c;
-  font-size: 18px;
+.recipients-count-badge-premium {
+  background: var(--cream);
+  color: var(--primary-green);
+  border-radius: 12px;
+  padding: 4px 12px;
+  font-size: 13px;
   font-weight: 700;
-  line-height: 1.6;
-  letter-spacing: -0.18px;
-  margin: 0;
+  min-width: 28px;
+  text-align: center;
 }
-
-.reminder-tags {
-  display: flex;
-  gap: 8px;
-}
-
-.reminder-tag {
+.recipients-chips-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  background: #31920b;
-  border-radius: 48px;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.6;
-  letter-spacing: -0.14px;
+  overflow-x: auto;
+  padding: 6px 0 10px 0;
+  min-height: 48px;
+  background: var(--light-gray);
+  border-radius: 18px;
+  box-shadow: 0 1px 4px rgba(21,61,28,0.07);
+  scrollbar-width: thin;
 }
-
-.reminder-tag.removable {
-  color: #fff9ce;
+.chips-scrollable {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-
-.reminder-tag.add-tag {
-  color: #fff;
+.recipient-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--secondary-green);
+  border-radius: 18px;
+  padding: 4px 12px 4px 4px;
+  color: var(--white);
+  font-size: 15px;
+  font-weight: 600;
+  min-width: 56px;
+  min-height: 32px;
+  max-height: 32px;
+  box-shadow: 0 1px 2px rgba(21,61,28,0.07);
+  transition: box-shadow 0.2s;
 }
-
-.remove-tag-btn {
+.recipient-chip-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #fff;
+  border: 2px solid var(--dark-green);
+}
+.recipient-chip-name {
+  margin-right: 2px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.recipient-chip-remove {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0;
-  width: 18px;
-  height: 18px;
+  padding: 2px;
+  margin-left: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.toggle-switch {
-  position: relative;
-  width: 54px;
-  height: 30px;
-}
-
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.toggle-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #153d1c;
-  border-radius: 16px;
-  transition: 0.3s;
-}
-
-.toggle-handle {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 26px;
-  height: 26px;
-  background: #fff;
   border-radius: 50%;
-  transition: 0.3s;
+  transition: background 0.2s;
 }
-
-input:checked + .toggle-slider .toggle-handle {
-  transform: translateX(-24px);
+.recipient-chip-remove:focus {
+  outline: 2px solid var(--accent-green);
+}
+.recipient-chip-add {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--secondary-green);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+.recipient-chip-add:focus {
+  outline: 2px solid var(--accent-green);
+}
+.recipient-chip-add svg {
+  width: 20px;
+  height: 20px;
 }
 
 .schedule-btn {
@@ -1217,7 +1718,7 @@ input:checked + .toggle-slider .toggle-handle {
   justify-content: center;
   gap: 8px;
   padding: 24px 14px;
-  background: #31920b;
+  background: var(--secondary-green);
   border: none;
   border-radius: 28px;
   color: #fff9ce;
@@ -1229,10 +1730,19 @@ input:checked + .toggle-slider .toggle-handle {
   width: 100%;
 }
 
-.coin-emoji {
-  color: #fff;
-  font-size: 14px;
+.credit-icon {
+  display: flex;
+  align-items: center;
+  margin-left: 6px;
+  height: 20px;
+}
+.credit-count {
+  margin-left: 4px;
+  font-size: 16px;
   font-weight: 700;
+  color: #ffffff;
+  min-width: 18px;
+  text-align: center;
 }
 
 /* Actions Section */
@@ -1243,7 +1753,7 @@ input:checked + .toggle-slider .toggle-handle {
 }
 
 .actions-card {
-  background: #fff;
+  background: var(--white);
   border-radius: 18px;
   padding: 20px 16px;
 }
@@ -1268,7 +1778,7 @@ input:checked + .toggle-slider .toggle-handle {
 }
 
 .action-text {
-  color: #153d1c;
+  color: var(--primary-green);
   font-size: 16px;
   font-weight: 400;
   line-height: 1.6;
@@ -1276,7 +1786,7 @@ input:checked + .toggle-slider .toggle-handle {
 }
 
 .action-time {
-  color: #153d1c;
+  color: var(--primary-green);
   font-size: 16px;
   font-weight: 400;
   line-height: 1.6;
@@ -1310,30 +1820,37 @@ input:checked + .toggle-slider .toggle-handle {
 /* Floating Action Button */
 .fab-container {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: 16px;
+  right: 16px;
   z-index: 1000;
 }
 
 .floating-action-btn {
-  width: 48px;
-  height: 48px;
+  width: 82px;
+  height: 82px;
   border-radius: 50%;
-  background: linear-gradient(170deg, #e1f524 0%, #b9f524 97.69%);
-  border: 1.75px solid #fff;
-  box-shadow:
-    0px 0px 0px #eeff49,
-    0px 1.173px 2.347px #e7ff00;
+  background: linear-gradient(135deg, var(--secondary-green) 0%, var(--yellow-accent) 80%);
+  border: 2.5px solid var(--white);
+  box-shadow: 0 6px 32px 0 rgba(21, 61, 28, 0.18), 0 1.5px 8px 0 #fef20044;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #141b34;
-  transition: transform 0.2s ease;
+  color: var(--primary-green);
+  transition: transform 0.18s, box-shadow 0.18s, background 0.18s;
 }
 
-.floating-action-btn:hover {
-  transform: scale(1.05);
+.floating-action-btn:hover, .floating-action-btn:focus {
+  background: linear-gradient(135deg, var(--yellow-accent) 0%, var(--secondary-green) 100%);
+  box-shadow: 0 10px 40px 0 rgba(21, 61, 28, 0.22), 0 2px 12px 0 #fef20066;
+  transform: scale(1.07);
+  outline: none;
+}
+
+.floating-action-btn svg {
+  width: 36px;
+  height: 36px;
+  filter: drop-shadow(0 2px 8px #153d1c22);
 }
 
 /* Responsive Design */
@@ -1351,16 +1868,16 @@ input:checked + .toggle-slider .toggle-handle {
   }
 
   .partners-carousel {
-    gap: 12px;
+    gap: 16px;
   }
 
-  .partner-card {
+  .partners-carousel .partner-card {
     min-width: 140px;
-    height: 160px;
+    height: 208px;
   }
 
   .message-card {
-    padding: 16px 20px;
+    padding: 16px;
   }
 
   .fab-container {
@@ -1386,6 +1903,24 @@ input:checked + .toggle-slider .toggle-handle {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
+  }
+  .recipients-chips-row {
+    gap: 4px;
+    min-height: 40px;
+    padding: 4px 0 8px 0;
+  }
+  .recipient-chip {
+    min-width: 48px;
+    font-size: 14px;
+    padding: 4px 8px 4px 4px;
+  }
+  .recipient-chip-avatar {
+    width: 24px;
+    height: 24px;
+  }
+  .recipient-chip-add {
+    width: 28px;
+    height: 28px;
   }
 }
 
@@ -1416,11 +1951,613 @@ input:checked + .toggle-slider .toggle-handle {
 
 @media (prefers-contrast: high) {
   .partner-card {
-    border: 2px solid #153d1c;
+    border: 2px solid var(--primary-green);
   }
 
   .toggle-slider {
-    border: 2px solid #153d1c;
+    border: 2px solid var(--primary-green);
   }
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--primary-green);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-align: left;
+}
+
+.dropdown-item:hover {
+  background: rgba(21, 61, 28, 0.05);
+}
+
+.dropdown-item svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.user-name {
+  color: var(--primary-green);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  line-height: 1.6;
+  letter-spacing: -0.2px;
+  margin: 0;
+}
+
+.dropdown-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.credits-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flag-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.separator-dot {
+  width: 2px;
+  height: 2px;
+  background: var(--primary-green);
+  border-radius: 50%;
+}
+
+.fade-slide-enter-active, .fade-slide-leave-active {
+  transition: opacity 0.25s cubic-bezier(0.4,0,0.2,1), transform 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+.fade-slide-enter-from, .fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.fade-slide-enter-to, .fade-slide-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.theme-toggle-container {
+  display: flex;
+  align-items: center;
+  margin-left: 12px;
+}
+.theme-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: filter 0.2s;
+}
+.theme-toggle-btn:focus {
+  outline: 2px solid var(--secondary-green);
+}
+
+.toast-success {
+  position: fixed;
+  left: 50%;
+  bottom: 100px;
+  transform: translateX(-50%);
+  background: var(--secondary-green);
+  color: var(--white);
+  padding: 16px 32px;
+  border-radius: 24px;
+  font-size: 18px;
+  font-weight: 600;
+  box-shadow: 0 2px 12px rgba(21,61,28,0.12);
+  z-index: 2000;
+  animation: fadeInOut 2s;
+}
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+}
+
+.recipients-badge-premium {
+  background: var(--secondary-green);
+  color: var(--white);
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-left: 4px;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.partner-modal-overlay.premium {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(21,61,28,0.18);
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInOut 0.3s;
+}
+.partner-modal.premium {
+  background: #fff;
+  border-radius: 32px;
+  box-shadow: 0 8px 40px 0 rgba(21,61,28,0.10), 0 2px 12px rgba(21,61,28,0.12);
+  width: 95vw;
+  max-width: 420px;
+  padding: 36px 24px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  position: relative;
+}
+.partner-modal-header.premium {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.partner-modal-title.premium {
+  font-size: 22px;
+  font-weight: 700;
+  color: #153d1c;
+  margin: 0 0 18px 0;
+  letter-spacing: -0.5px;
+  text-align: center;
+}
+.partner-modal-close.premium {
+  color: #153d1c;
+  position: absolute;
+  top: 32px;
+  right: 24px;
+}
+.partner-modal-search.premium {
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: 24px;
+  border: 2px solid #31920b;
+  font-size: 17px;
+  font-family: var(--font-main);
+  color: #153d1c;
+  background: #f5f5f5;
+  margin-bottom: 18px;
+  outline: none;
+  transition: border-color 0.2s;
+  text-align: left;
+}
+.partner-modal-search.premium::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+.partner-modal-search.premium:focus {
+  border-color: #1ef524;
+}
+.partner-modal-list.premium {
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+.partner-modal-item.premium {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-radius: 22px;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: box-shadow 0.18s, background 0.18s;
+  outline: none;
+  box-shadow: 0 1px 4px rgba(21,61,28,0.04);
+  border: 1.5px solid transparent;
+  min-height: 56px;
+}
+.partner-modal-item.premium[aria-checked="true"], .partner-modal-item.premium.selected {
+  background: #e8ffea;
+  border: 1.5px solid #1ef524;
+}
+.partner-modal-item.premium:hover {
+  background: #f5f5f5;
+  box-shadow: 0 2px 8px rgba(21,61,28,0.08);
+}
+.partner-modal-item.premium:focus {
+  border: 2px solid #1ef524;
+}
+.partner-modal-avatar.premium {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #fff;
+  border: 2px solid #31920b;
+  box-shadow: 0 1px 4px rgba(21,61,28,0.08);
+  margin-right: 16px;
+}
+.partner-modal-info.premium {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  min-width: 0;
+}
+.partner-modal-name.premium {
+  font-size: 18px;
+  font-weight: 700;
+  color: #153d1c;
+  margin-bottom: 2px;
+  line-height: 1.1;
+}
+.partner-modal-role.premium {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.1;
+}
+.partner-modal-checkbox.premium {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: none;
+  margin-left: 18px;
+  border: 2px solid #1ef524;
+  background: #fff;
+  transition: background 0.18s, border 0.18s;
+  flex-shrink: 0;
+}
+.partner-modal-checkbox.premium.selected {
+  background: #1ef524;
+  border: 2px solid #1ef524;
+  animation: popIn 0.18s;
+}
+@keyframes popIn {
+  0% { transform: scale(0.7); opacity: 0.5; }
+  80% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.partner-modal-checkbox.premium.selected svg {
+  filter: drop-shadow(0 1px 2px #fff9);
+}
+.partner-modal-validate.premium {
+  width: 100%;
+  background: #31920b;
+  color: #fff;
+  border: none;
+  border-radius: 32px;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 18px 0;
+  margin-top: 22px;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 2px 12px rgba(21,61,28,0.10);
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.partner-modal-validate.premium:focus {
+  outline: 2px solid #1ef524;
+}
+.partner-modal-glow {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  margin-top: -12px;
+  background: linear-gradient(90deg, #1ef524 0%, #fef200 100%);
+  color: #153d1c;
+  border-radius: 0 0 32px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  padding: 14px 0 12px 0;
+  box-shadow: 0 8px 32px 0 rgba(21,61,28,0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.partner-modal-glow-icon {
+  font-size: 20px;
+  margin-right: 4px;
+}
+@media (max-width: 600px) {
+  .partner-modal.premium {
+    max-width: 99vw;
+    padding: 12px 4px 8px 4px;
+    border-radius: 0 0 32px 32px;
+  }
+  .partner-modal-title.premium {
+    font-size: 17px;
+  }
+  .partner-modal-list.premium {
+    max-height: 180px;
+  }
+  .partner-modal-glow {
+    max-width: 99vw;
+    border-radius: 0 0 32px 32px;
+    font-size: 15px;
+    padding: 10px 0 8px 0;
+  }
+}
+
+.datepicker-popover-vanialog {
+  position: absolute;
+  top: 54px;
+  left: 0;
+  z-index: 20;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px 0 rgba(21,61,28,0.13);
+  padding: 18px 18px 12px 18px;
+  min-width: 260px;
+  max-width: 320px;
+  border: 2px solid #31920b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeInOut 0.18s;
+}
+.datepicker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 8px;
+}
+.datepicker-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #153d1c;
+}
+.datepicker-nav {
+  background: #f5f5f5;
+  border: none;
+  color: #31920b;
+  font-size: 22px;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.datepicker-nav:focus {
+  outline: 2px solid #1ef524;
+}
+.datepicker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+.datepicker-dayname {
+  font-size: 13px;
+  color: #6b7280;
+  text-align: center;
+  font-weight: 600;
+}
+.datepicker-empty {
+  height: 32px;
+}
+.datepicker-day {
+  background: #fff;
+  border: 1.5px solid transparent;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 15px;
+  color: #153d1c;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, border 0.18s;
+}
+.datepicker-day.today {
+  border: 1.5px solid #1ef524;
+}
+.datepicker-day.selected {
+  background: #1ef524;
+  color: #153d1c;
+  border: 1.5px solid #31920b;
+}
+.datepicker-day:hover, .datepicker-day:focus {
+  background: #e8ffea;
+  border: 1.5px solid #31920b;
+  outline: none;
+}
+.datepicker-today-btn {
+  margin-top: 6px;
+  background: #31920b;
+  color: #fff;
+  border: none;
+  border-radius: 18px;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.datepicker-today-btn:focus {
+  outline: 2px solid #1ef524;
+}
+
+.timepicker-popover-vanialog {
+  position: absolute;
+  top: 54px;
+  left: 0;
+  z-index: 20;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px 0 rgba(21,61,28,0.13);
+  padding: 18px 18px 12px 18px;
+  min-width: 320px;
+  max-width: 420px;
+  border: 2px solid #31920b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeInOut 0.18s;
+}
+.timepicker-header {
+  font-size: 16px;
+  font-weight: 700;
+  color: #153d1c;
+  margin-bottom: 8px;
+}
+.timepicker-doublecol {
+  display: flex;
+  flex-direction: row;
+  gap: 18px;
+  width: 100%;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.timepicker-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.timepicker-col-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #31920b;
+  margin-bottom: 4px;
+}
+.timepicker-col-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 180px;
+  overflow-y: auto;
+  align-items: center;
+}
+.timepicker-col-btn {
+  background: #fff;
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  width: 44px;
+  height: 32px;
+  font-size: 15px;
+  color: #153d1c;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 2px;
+  transition: background 0.18s, border 0.18s;
+}
+.timepicker-col-btn.selected {
+  background: #1ef524;
+  color: #153d1c;
+  border: 1.5px solid #31920b;
+}
+.timepicker-col-btn:hover, .timepicker-col-btn:focus {
+  background: #e8ffea;
+  border: 1.5px solid #31920b;
+  outline: none;
+}
+.timepicker-now-btn {
+  margin-top: 6px;
+  background: #31920b;
+  color: #fff;
+  border: none;
+  border-radius: 18px;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.timepicker-now-btn:focus {
+  outline: 2px solid #1ef524;
+}
+
+.credit-btn-group {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 12px;
+  background: linear-gradient(90deg, #fef200 60%, #fff9cc 100%);
+  border-radius: 999px;
+  padding: 4px 14px 4px 12px;
+  box-shadow: 0 2px 12px 0 #fef20033;
+  font-weight: 800;
+  font-size: 17px;
+  gap: 6px;
+}
+.credit-count-btn {
+  color: #153d1c;
+  font-weight: 800;
+  font-size: 17px;
+  min-width: 18px;
+  text-align: center;
+  letter-spacing: 0.1px;
+}
+.credit-icon-btn {
+  display: flex;
+  align-items: center;
+  height: 20px;
+}
+
+/* Statistics Section */
+.stats-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.stats-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.section-loader {
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.section-error {
+  text-align: center;
+  color: var(--error-red);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.section-empty {
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 16px;
+  font-weight: 600;
 }
 </style>

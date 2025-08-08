@@ -158,6 +158,48 @@ export const useUserStore = defineStore("user", () => {
     error.value = "";
   };
 
+  /**
+   * Forcer la récupération des données utilisateur
+   * @param {string} numero - Numéro de téléphone
+   * @returns {Promise<Object>} - Résultat de la récupération
+   */
+  const forcerRecuperationUtilisateur = async (numero) => {
+    isLoading.value = true;
+    error.value = "";
+
+    try {
+      console.log("🔄 Forçage de la récupération des données utilisateur:", numero);
+      
+      const userInfo = await userService.obtenirUtilisateur(numero);
+      
+      if (userInfo.success) {
+        utilisateur.value = userInfo.utilisateur;
+        console.log("✅ Données utilisateur forcément récupérées:", userInfo.utilisateur);
+        return {
+          success: true,
+          utilisateur: userInfo.utilisateur
+        };
+      } else {
+        error.value = userInfo.message;
+        console.error("❌ Erreur lors de la récupération forcée:", userInfo.message);
+        return {
+          success: false,
+          message: userInfo.message
+        };
+      }
+
+    } catch (err) {
+      error.value = "Erreur lors de la récupération forcée de l'utilisateur";
+      console.error("💥 Exception lors de la récupération forcée:", err);
+      return {
+        success: false,
+        message: error.value
+      };
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
   return {
     // State
     telephone,
@@ -176,7 +218,8 @@ export const useUserStore = defineStore("user", () => {
     creerUtilisateur,
     mettreAJourConnexion,
     deconnecter,
-    clearError
+    clearError,
+    forcerRecuperationUtilisateur
   };
 });
 

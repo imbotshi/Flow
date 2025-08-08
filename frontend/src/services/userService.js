@@ -13,16 +13,18 @@ class UserService {
    */
   async verifierUtilisateur(telephone) {
     try {
-      console.log('🔍 Vérification utilisateur:', telephone);
-      const response = await fetch(`${API_BASE_URL}/user/exists`, {
+      const url = `${API_BASE_URL}/user/exists`;
+      const payload = { telephone };
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Appel API: POST ${url}, Payload:`, payload);
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ telephone })
+        body: JSON.stringify(payload)
       });
       const data = await response.json();
-      console.log('📋 Réponse vérification utilisateur:', data);
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Réponse API verifierUtilisateur:`, data);
       if (!response.ok) {
         throw new Error(data.message || 'Erreur lors de la vérification');
       }
@@ -32,7 +34,7 @@ class UserService {
         message: data.message
       };
     } catch (error) {
-      console.error('❌ Erreur vérification utilisateur:', error);
+      console.error(`[FRONTEND] [${new Date().toISOString()}] Erreur API verifierUtilisateur:`, error);
       return {
         success: false,
         existe: false,
@@ -48,32 +50,27 @@ class UserService {
    */
   async creerUtilisateur(userData) {
     try {
-      console.log('👤 Création utilisateur:', userData);
-      
-      const response = await fetch(`${API_BASE_URL}/utilisateurs/creer`, {
+      const url = `${API_BASE_URL}/utilisateurs/creer`;
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Appel API: POST ${url}, Payload:`, userData);
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(userData)
       });
-
       const data = await response.json();
-      
-      console.log('📋 Réponse création utilisateur:', data);
-      
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Réponse API creerUtilisateur:`, data);
       if (!response.ok) {
         throw new Error(data.message || 'Erreur lors de la création');
       }
-
       return {
         success: true,
         utilisateur: data.utilisateur,
         message: data.message
       };
-
     } catch (error) {
-      console.error('❌ Erreur création utilisateur:', error);
+      console.error(`[FRONTEND] [${new Date().toISOString()}] Erreur API creerUtilisateur:`, error);
       return {
         success: false,
         utilisateur: null,
@@ -89,29 +86,23 @@ class UserService {
    */
   async mettreAJourConnexion(telephone) {
     try {
-      console.log('🔄 Mise à jour connexion:', telephone);
-      
-      const response = await fetch(`${API_BASE_URL}/utilisateurs/connexion/${telephone}`, {
+      const url = `${API_BASE_URL}/utilisateurs/connexion/${telephone}`;
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Appel API: PUT ${url}`);
+      const response = await fetch(url, {
         method: 'PUT'
-        // Pas de body JSON, donc pas besoin du header Content-Type
       });
-
       const data = await response.json();
-      
-      console.log('📋 Réponse mise à jour connexion:', data);
-      
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Réponse API mettreAJourConnexion:`, data);
       if (!response.ok) {
         throw new Error(data.message || 'Erreur lors de la mise à jour');
       }
-
       return {
         success: true,
         message: data.message,
         dateDerniereConnexion: data.dateDerniereConnexion
       };
-
     } catch (error) {
-      console.error('❌ Erreur mise à jour connexion:', error);
+      console.error(`[FRONTEND] [${new Date().toISOString()}] Erreur API mettreAJourConnexion:`, error);
       return {
         success: false,
         message: error.message || 'Erreur lors de la mise à jour de la connexion'
@@ -126,30 +117,25 @@ class UserService {
    */
   async obtenirUtilisateur(telephone) {
     try {
-      console.log('📋 Récupération utilisateur:', telephone);
-      
-      const response = await fetch(`${API_BASE_URL}/utilisateurs/${telephone}`, {
+      const url = `${API_BASE_URL}/utilisateurs/${telephone}`;
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Appel API: GET ${url}`);
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         }
       });
-
       const data = await response.json();
-      
-      console.log('📋 Réponse récupération utilisateur:', data);
-      
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Réponse API obtenirUtilisateur:`, data);
       if (!response.ok) {
         throw new Error(data.message || 'Erreur lors de la récupération');
       }
-
       return {
         success: true,
         utilisateur: data.utilisateur
       };
-
     } catch (error) {
-      console.error('❌ Erreur récupération utilisateur:', error);
+      console.error(`[FRONTEND] [${new Date().toISOString()}] Erreur API obtenirUtilisateur:`, error);
       return {
         success: false,
         utilisateur: null,
@@ -165,8 +151,9 @@ class UserService {
    */
   async finaliserInscription(userData) {
     try {
-      console.log('🚀 Finalisation inscription:', userData);
-      const response = await fetch(`${API_BASE_URL}/user/finaliser-inscription`, {
+      const url = `${API_BASE_URL}/user/finaliser-inscription`;
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Appel API: POST ${url}, Payload:`, userData);
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -174,7 +161,7 @@ class UserService {
         body: JSON.stringify(userData)
       });
       const data = await response.json();
-      console.log('📋 Réponse finalisation inscription:', data);
+      console.log(`[FRONTEND] [${new Date().toISOString()}] Réponse API finaliserInscription:`, data);
       if (!response.ok) {
         throw new Error(data.message || 'Erreur lors de la finalisation');
       }
@@ -184,7 +171,7 @@ class UserService {
         message: data.message
       };
     } catch (error) {
-      console.error('❌ Erreur finalisation inscription:', error);
+      console.error(`[FRONTEND] [${new Date().toISOString()}] Erreur API finaliserInscription:`, error);
       return {
         success: false,
         utilisateur: null,
